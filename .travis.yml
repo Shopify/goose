@@ -1,0 +1,13 @@
+language: go
+
+go:
+  - "1.10.x"
+  - "1.11.x"
+
+script:
+  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+  - dep ensure
+  - make coverage
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
