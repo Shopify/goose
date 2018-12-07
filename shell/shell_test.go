@@ -227,7 +227,7 @@ func TestCommandForceKills(t *testing.T) {
 	assert.NoError(t, err)
 
 	// give bash time to boot and register the SIGTERM handler
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 
 	cancel()
 
@@ -281,7 +281,7 @@ func TestCommandStdinAfterStart(t *testing.T) {
 	go func() {
 		done <- cmd.Wait()
 	}()
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 
 	select {
 	case <-done:
@@ -330,7 +330,7 @@ func TestCommandStdoutPipe(t *testing.T) {
 	assert.NoError(t, err)
 
 	read <- struct{}{}
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 
 	select {
 	case b := <-output:
@@ -341,7 +341,7 @@ func TestCommandStdoutPipe(t *testing.T) {
 
 	_, err = stdin.Write([]byte("foo"))
 	assert.NoError(t, err)
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 
 	select {
 	case b := <-output:
@@ -353,13 +353,14 @@ func TestCommandStdoutPipe(t *testing.T) {
 
 	_, err = stdin.Write([]byte("bar"))
 	assert.NoError(t, err)
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 
 	_, err = stdin.Write([]byte("baz"))
 	assert.NoError(t, err)
+	time.Sleep(100 * time.Millisecond)
 
 	read <- struct{}{}
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 
 	select {
 	case b := <-output:
@@ -373,7 +374,7 @@ func TestCommandStdoutPipe(t *testing.T) {
 	assert.NoError(t, err)
 
 	read <- struct{}{}
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 
 	err = cmd.Wait()
 	assert.NoError(t, err)
