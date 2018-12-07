@@ -1,0 +1,11 @@
+name: goose
+
+up:
+  - go:
+      version: "1.11.2"
+
+commands:
+  doc-server: |
+    echo "Hosting documentation server at http://localhost:6060/github.com/Shopify/goose"
+    godoc -http=:6060
+  test: go test -race ./...
