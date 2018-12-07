@@ -13,6 +13,9 @@ before_install:
 install:
   - bash .gitcookies.sh
   - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+  - go get -u github.com/alecthomas/gometalinter
+  - go get -u github.com/haya14busa/gosum/cmd/gosumcheck
+  - go get -u github.com/burke/goenumcheck/cmd/goenumcheck
   - dep ensure
 script:
   - make $TARGET
