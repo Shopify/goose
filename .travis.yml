@@ -3,6 +3,8 @@ go:
   - 1.10.x
   - 1.11.x
 before_install:
+  # Use authentication for higher limits with go.googlesource.com
+  # https://github.com/golang/go/issues/12933#issuecomment-199429151
   - openssl aes-256-cbc -K $encrypted_36455a09984d_key -iv $encrypted_36455a09984d_iv -in .gitcookies.sh.enc -out .gitcookies.sh -d
 install:
   - bash .gitcookies.sh
