@@ -93,26 +93,26 @@ func (rw *Buffer) WriteString(s string) (n int, err error) {
 
 func (rw *Buffer) Next(n int) []byte {
 	rw.l.Lock()
-	rw.l.Unlock()
+	defer rw.l.Unlock()
 	return rw.b.Next(n)
 }
 
 func (rw *Buffer) Reset() {
 	rw.l.Lock()
-	rw.l.Unlock()
 	rw.b.Reset()
+	rw.l.Unlock()
 }
 
 func (rw *Buffer) Truncate(n int) {
 	rw.l.Lock()
-	rw.l.Unlock()
 	rw.b.Truncate(n)
+	rw.l.Unlock()
 }
 
 func (rw *Buffer) Grow(n int) {
 	rw.l.Lock()
-	rw.l.Unlock()
 	rw.b.Grow(n)
+	rw.l.Unlock()
 }
 
 func (rw *Buffer) String() string {
@@ -122,29 +122,29 @@ func (rw *Buffer) String() string {
 	}
 
 	rw.l.RLock()
-	rw.l.RUnlock()
+	defer rw.l.RUnlock()
 	return rw.b.String()
 }
 
 func (rw *Buffer) Bytes() []byte {
 	rw.l.RLock()
-	rw.l.RUnlock()
+	defer rw.l.RUnlock()
 	return rw.b.Bytes()
 }
 
 func (rw *Buffer) Len() int {
 	rw.l.RLock()
-	rw.l.RUnlock()
+	defer rw.l.RUnlock()
 	return rw.b.Len()
 }
 
 func (rw *Buffer) Cap() int {
 	rw.l.RLock()
-	rw.l.RUnlock()
+	defer rw.l.RUnlock()
 	return rw.b.Cap()
 }
 
-var _ interface{
+var _ interface {
 	io.ReadWriter
 	io.ReaderFrom
 	io.WriterTo

@@ -29,7 +29,7 @@ const defaultShutdownDeadline = 3 * time.Second
 type Component safely.Runnable
 
 var (
-	// ErrAlreadyRunning is returned when `RunAndWait` is called after already
+	// ErrCanOnlyRunOnce is returned when `RunAndWait` is called after already
 	// being called.
 	ErrCanOnlyRunOnce = errors.New("can only run once")
 

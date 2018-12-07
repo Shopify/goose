@@ -13,6 +13,9 @@ coverage.txt: $(GOFILES) Makefile
 show-coverage: coverage.txt
 	go tool cover -html=coverage.txt
 
+style: $(GOFILES) Makefile .gometalinter.json
+	bin/style
+
 clean:
 	go clean
 	rm -f coverage.txt

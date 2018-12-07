@@ -35,9 +35,9 @@ func TestCond_TimeoutWait(t *testing.T) {
 
 		go func() {
 			<-time.After(delay)
-		c.L.Lock()
-		c.Signal()
-		c.L.Unlock()
+			c.L.Lock()
+			c.Signal()
+			c.L.Unlock()
 		}()
 
 		assert.True(t, c.TimeoutWait(2*delay))
@@ -50,9 +50,9 @@ func TestCond_TimeoutWait(t *testing.T) {
 
 		go func() {
 			<-time.After(2 * delay)
-		c.L.Lock()
-		c.Signal()
-		c.L.Unlock()
+			c.L.Lock()
+			c.Signal()
+			c.L.Unlock()
 		}()
 
 		assert.False(t, c.TimeoutWait(delay))
@@ -67,9 +67,9 @@ func TestCond_TombWait(t *testing.T) {
 
 		go func() {
 			<-time.After(delay)
-		c.L.Lock()
-		c.Signal()
-		c.L.Unlock()
+			c.L.Lock()
+			c.Signal()
+			c.L.Unlock()
 		}()
 
 		tb := &tomb.Tomb{}
@@ -84,9 +84,9 @@ func TestCond_TombWait(t *testing.T) {
 
 		go func() {
 			<-time.After(2 * delay)
-		c.L.Lock()
-		c.Signal()
-		c.L.Unlock()
+			c.L.Lock()
+			c.Signal()
+			c.L.Unlock()
 		}()
 
 		tb := &tomb.Tomb{}
@@ -107,9 +107,9 @@ func TestCond_ContextWait(t *testing.T) {
 
 		go func() {
 			<-time.After(delay)
-		c.L.Lock()
-		c.Signal()
-		c.L.Unlock()
+			c.L.Lock()
+			c.Signal()
+			c.L.Unlock()
 		}()
 
 		ctx := context.Background()
@@ -124,9 +124,9 @@ func TestCond_ContextWait(t *testing.T) {
 
 		go func() {
 			<-time.After(2 * delay)
-		c.L.Lock()
-		c.Signal()
-		c.L.Unlock()
+			c.L.Lock()
+			c.Signal()
+			c.L.Unlock()
 		}()
 
 		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(delay))
@@ -367,8 +367,6 @@ func TestCondSignalStealing(t *testing.T) {
 		}()
 
 		<-ch
-		m.Lock()
-		m.Unlock()
 
 		// We know that the waiter is in the cond.Wait() call because we
 		// synchronized with it, then acquired/released the mutex it was

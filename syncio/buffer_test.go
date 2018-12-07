@@ -137,10 +137,16 @@ func TestBasicOperations(t *testing.T) {
 		}
 		check(t, "TestBasicOperations (4)", &buf, "a")
 
-		buf.WriteByte(testString[1])
+		err = buf.WriteByte(testString[1])
+		if err != nil {
+			t.Error("WriteByte unexpected err")
+		}
 		check(t, "TestBasicOperations (5)", &buf, "ab")
 
 		n, err = buf.Write(testBytes[2:26])
+		if err != nil {
+			t.Error("Write unexpected err")
+		}
 		if n != 24 {
 			t.Errorf("wrote 24 bytes, but n == %d", n)
 		}
@@ -155,7 +161,10 @@ func TestBasicOperations(t *testing.T) {
 		empty(t, "TestBasicOperations (9)", &buf, testString[0:20], make([]byte, 5))
 		empty(t, "TestBasicOperations (10)", &buf, "", make([]byte, 100))
 
-		buf.WriteByte(testString[1])
+		err = buf.WriteByte(testString[1])
+		if err != nil {
+			t.Error("WriteByte unexpected err")
+		}
 		c, err := buf.ReadByte()
 		if err != nil {
 			t.Error("ReadByte unexpected eof")
@@ -163,7 +172,7 @@ func TestBasicOperations(t *testing.T) {
 		if c != testString[1] {
 			t.Errorf("ReadByte wrong value c=%v", c)
 		}
-		c, err = buf.ReadByte()
+		_, err = buf.ReadByte()
 		if err == nil {
 			t.Error("ReadByte unexpected not eof")
 		}
@@ -291,7 +300,7 @@ func TestReadFromPanicReader(t *testing.T) {
 	}
 	check(t, "TestReadFromPanicReader (1)", &buf, "")
 
-	// Confirm that when Reader panics, the emtpy buffer remains empty
+	// Confirm that when Reader panics, the empty buffer remains empty
 	var buf2 Buffer
 	defer func() {
 		recover()
@@ -666,4 +675,3 @@ func BenchmarkBufferFullSmallReads(b *testing.B) {
 		}
 	}
 }
-

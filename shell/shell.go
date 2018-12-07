@@ -6,10 +6,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Shopify/goose/statsd"
 	"github.com/sirupsen/logrus"
 
 	"github.com/Shopify/goose/logger"
+	"github.com/Shopify/goose/statsd"
 )
 
 var log = logger.New("shell")

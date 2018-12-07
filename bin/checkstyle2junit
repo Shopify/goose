@@ -1,0 +1,33 @@
+#!/usr/bin/env ruby
+
+require 'open3'
+
+module CheckstyleToJUnit
+  # https://github.com/koalaman/shellcheck/wiki/JUnit
+  XSLT = File.expand_path('../support/checkstyle2junit.xslt', __dir__)
+
+  class << self
+    def call
+      puts translate(ARGF.read)
+    end
+
+    def translate(input)
+      out, stat = Open3.capture2('xmlstarlet', 'tr', XSLT, stdin_data: input)
+      abort('xmlstarlet failed') unless stat.success?
+      out
+    end
+
+    def spawnwait(*args, **kwargs)
+      _, stat = Process.waitpid2(Process.spawn(*args, **kwargs))
+      stat
+    end
+
+    def must_spawnwait(*args, **kwargs)
+      stat = spawnwait(*args, **kwargs)
+      abort("#{args.first} failed") unless stat.success?
+      stat
+    end
+  end
+end
+
+__FILE__ == $PROGRAM_NAME and CheckstyleToJUnit.call

@@ -2,6 +2,10 @@ language: go
 go:
   - 1.10.x
   - 1.11.x
+env:
+  matrix:
+    - TARGET=style
+    - TARGET=coverage
 before_install:
   # Use authentication for higher limits with go.googlesource.com
   # https://github.com/golang/go/issues/12933#issuecomment-199429151
@@ -11,6 +15,6 @@ install:
   - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
   - dep ensure
 script:
-  - make coverage
+  - make $TARGET
 after_success:
   - bash <(curl -s https://codecov.io/bash)

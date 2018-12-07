@@ -124,7 +124,7 @@ func (s *store) setData(ctx context.Context, key string, data interface{}, ttl t
 func (s *store) lock(ctx context.Context, key string) (bool, error) {
 	log(ctx, nil).WithField("key", key).Debug("locking item")
 
-	err := s.client.Add(key + ".lock", &Item{
+	err := s.client.Add(key+".lock", &Item{
 		Expiration: time.Now().Add(s.lockExpiry),
 	})
 	if err == nil {
