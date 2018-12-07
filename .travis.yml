@@ -1,11 +1,15 @@
 language: go
-go:
-  - 1.10.x
-  - 1.11.x
-env:
-  matrix:
-    - TARGET=style
-    - TARGET=coverage
+matrix:
+  include:
+    - name: "1.10.x unit tests"
+      go: "1.10.x"
+      env: TARGET=test
+    - name: "1.11.x unit tests"
+      go: "1.11.x"
+      env: TARGET=coverage
+    - name: "Linting"
+      go: "1.11.x"
+      env: TARGET=style
 before_install:
   # Use authentication for higher limits with go.googlesource.com
   # https://github.com/golang/go/issues/12933#issuecomment-199429151
@@ -20,4 +24,4 @@ install:
 script:
   - make $TARGET
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+  - if [[ -f "coverage.txt" ]]; then bash <(curl -s https://codecov.io/bash); fi
