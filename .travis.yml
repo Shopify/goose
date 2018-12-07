@@ -1,13 +1,14 @@
 language: go
-
 go:
-  - "1.10.x"
-  - "1.11.x"
-
-script:
+  - 1.10.x
+  - 1.11.x
+before_install:
+  - openssl aes-256-cbc -K $encrypted_36455a09984d_key -iv $encrypted_36455a09984d_iv -in .gitcookies.sh.enc -out .gitcookies.sh -d
+install:
+  - bash .gitcookies.sh
   - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
   - dep ensure
+script:
   - make coverage
-
 after_success:
   - bash <(curl -s https://codecov.io/bash)
