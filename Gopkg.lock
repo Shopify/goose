@@ -10,6 +10,14 @@
   version = "2.1.0"
 
 [[projects]]
+  digest = "1:512883404c2a99156e410e9880e3bb35ecccc0c07c1159eb204b5f3ef3c431b3"
+  name = "github.com/bitly/go-simplejson"
+  packages = ["."]
+  pruneopts = ""
+  revision = "aabad6e819789e569bd6aabf444c935aa9ba1e44"
+  version = "v0.5.0"
+
+[[projects]]
   digest = "1:4a7b6a852e018acafd79bf345944a9b2a332ebb968593ff36edadd3677ebb019"
   name = "github.com/bugsnag/bugsnag-go"
   packages = [
@@ -161,6 +169,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/DataDog/datadog-go/statsd",
+    "github.com/bitly/go-simplejson",
     "github.com/bugsnag/bugsnag-go",
     "github.com/bugsnag/bugsnag-go/errors",
     "github.com/gorilla/mux",

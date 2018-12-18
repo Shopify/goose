@@ -3,6 +3,7 @@ package logrusbugsnag
 import (
 	"errors"
 	"runtime"
+	"strings"
 
 	"github.com/bugsnag/bugsnag-go"
 	bugsnag_errors "github.com/bugsnag/bugsnag-go/errors"
@@ -82,12 +83,14 @@ func (hook *Hook) Fire(entry *logrus.Entry) error {
 	}
 
 	// if there's a panic on the stack (runtime.gopanic), assume we wanted
-	// everything right before that.  Otherwise, assume we wanted everything 4+
+	// everything right before that.  Otherwise, assume we wanted everything 5+
 	// frames up (before we got into logrus)
 	depthOfPanic := findPanic()
-	skipFrames := 5
+	skipFrames := 0
 	if depthOfPanic != 0 {
 		skipFrames = depthOfPanic + 1
+	} else {
+		skipFrames = findLogrusExit() + 1
 	}
 
 	errWithStack := bugsnag_errors.New(notifyErr, skipFrames)
@@ -100,6 +103,28 @@ func (hook *Hook) Fire(entry *logrus.Entry) error {
 }
 
 const goPanic = "runtime.gopanic"
+const logrusPackage = "github.com/sirupsen/logrus/"
+
+func findLogrusExit() int {
+	stack := make([]uintptr, 12)
+	// skip three frames: runtime.Callers, findLogrusExit, Hook.Fire
+	nCallers := runtime.Callers(3, stack)
+	frames := runtime.CallersFrames(stack[:nCallers])
+	foundLogrus := false
+	for i := 0; ; i++ {
+		frame, more := frames.Next()
+		if strings.Contains(frame.File, logrusPackage) {
+			if !foundLogrus {
+				foundLogrus = true
+			}
+		} else if foundLogrus {
+			return i
+		} else if !more {
+			// Exhausted the stack, take deepest.
+			return i
+		}
+	}
+}
 
 func findPanic() int {
 	stack := make([]uintptr, 50)
