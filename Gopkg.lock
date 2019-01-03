@@ -113,13 +113,12 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "generic_log"
-  digest = "1:7a060f48340dce23557ecebcac0452e329bb3766445434bf696d0d2b0d70e61f"
+  digest = "1:9d57e200ef5ccc4217fe0a34287308bac652435e7c6513f6263e0493d2245c56"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   pruneopts = ""
-  revision = "14fdc059caf463ccbc18c4d4a206dfa2df3361e2"
-  source = "https://github.com/lugray/logrus.git"
+  revision = "bcd833dfe83d3cebad139e4a29ed79cb2318bf95"
+  version = "v1.2.0"
 
 [[projects]]
   digest = "1:c587772fb8ad29ad4db67575dad25ba17a51f072ff18a22b4f0257a4d9c24f75"

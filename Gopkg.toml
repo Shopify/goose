@@ -25,11 +25,6 @@
   version = ">= 1.3.1"
 
 [[constraint]]
-  name = "github.com/sirupsen/logrus"
-  branch = "generic_log"
-  source = "https://github.com/lugray/logrus.git"
-
-[[constraint]]
   name = "github.com/stretchr/testify"
   version = ">= 1.2.1"
 
