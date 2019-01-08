@@ -65,8 +65,8 @@ func TestNewServer(t *testing.T) {
 	u := "http://" + s.Addr().String()
 	t.Logf("test server running on %s", u)
 
-	assert.Contains(t, logOutput.String(), "level=debug msg=\"starting server\" bind=\"127.0.0.1:0\"")
-	assert.Contains(t, logOutput.String(), fmt.Sprintf("level=debug msg=\"started server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
+	assert.Contains(t, logOutput.String(), "level=info msg=\"starting server\" bind=\"127.0.0.1:0\"")
+	assert.Contains(t, logOutput.String(), fmt.Sprintf("level=info msg=\"started server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
 
 	// Works
 	res, err := http.Get(u)

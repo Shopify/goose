@@ -62,7 +62,7 @@ func (c *server) Addr() *net.TCPAddr {
 func (c *server) Run() error {
 	ctx := logger.WithField(context.Background(), "bind", c.Server.Addr)
 
-	log(ctx, nil).Debug("starting server")
+	log(ctx, nil).Info("starting server")
 
 	ln, err := net.Listen("tcp", c.Server.Addr)
 	if err != nil {
@@ -74,7 +74,7 @@ func (c *server) Run() error {
 
 	ctx = logger.WithField(ctx, "addr", c.addr.String())
 
-	log(ctx, nil).Debug("started server")
+	log(ctx, nil).Info("started server")
 	defer log(ctx, nil).Debug("stopped server")
 
 	listener := stoppableKeepaliveListener{
