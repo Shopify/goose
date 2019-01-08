@@ -1,6 +1,7 @@
 package srvutil
 
 import (
+	"context"
 	"errors"
 	"net"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"gopkg.in/tomb.v2"
 
+	"github.com/Shopify/goose/logger"
 	"github.com/Shopify/goose/safely"
 )
 
@@ -58,6 +60,10 @@ func (c *server) Addr() *net.TCPAddr {
 }
 
 func (c *server) Run() error {
+	ctx := logger.WithField(context.Background(), "bind", c.Server.Addr)
+
+	log(ctx, nil).Info("starting server")
+
 	ln, err := net.Listen("tcp", c.Server.Addr)
 	if err != nil {
 		return err
@@ -65,6 +71,11 @@ func (c *server) Run() error {
 
 	c.addr = ln.Addr().(*net.TCPAddr)
 	close(c.haveAddr)
+
+	ctx = logger.WithField(ctx, "addr", c.addr.String())
+
+	log(ctx, nil).Info("started server")
+	defer log(ctx, nil).Debug("stopped server")
 
 	listener := stoppableKeepaliveListener{
 		TCPListener: ln.(*net.TCPListener),

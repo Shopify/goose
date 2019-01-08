@@ -1,6 +1,7 @@
 package srvutil
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -10,9 +11,11 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/tomb.v2"
 
+	"github.com/Shopify/goose/logger"
 	"github.com/Shopify/goose/safely"
 )
 
@@ -44,10 +47,16 @@ func ExampleNewServer() {
 }
 
 func TestNewServer(t *testing.T) {
+	testLog, logOutput := buildLogger()
+	origLog := log
+	log = testLog
+	defer func() { log = origLog }()
+
 	tb := &tomb.Tomb{}
 	sl := FuncServlet("/", func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusOK)
-		res.Write([]byte("great success"))
+		_, err := res.Write([]byte("great success"))
+		assert.NoError(t, err)
 	})
 	s := NewServer(tb, "127.0.0.1:0", sl)
 	defer s.Tomb().Kill(nil)
@@ -55,6 +64,9 @@ func TestNewServer(t *testing.T) {
 
 	u := "http://" + s.Addr().String()
 	t.Logf("test server running on %s", u)
+
+	assert.Contains(t, logOutput.String(), "level=info msg=\"starting server\" bind=\"127.0.0.1:0\"")
+	assert.Contains(t, logOutput.String(), fmt.Sprintf("level=info msg=\"started server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
 
 	// Works
 	res, err := http.Get(u)
@@ -64,8 +76,12 @@ func TestNewServer(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "great success", string(body))
 
+	assert.NotContains(t, logOutput.String(), fmt.Sprintf("level=debug msg=\"stopped server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
+
 	tb.Kill(errors.New("testing"))
 	<-tb.Dead()
+
+	assert.Contains(t, logOutput.String(), fmt.Sprintf("level=debug msg=\"stopped server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
 
 	// No longer works
 	res, err = http.Get(u)
@@ -74,4 +90,22 @@ func TestNewServer(t *testing.T) {
 	body, err = ioutil.ReadAll(res.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, "great success", string(body))
+}
+
+func buildLogger() (logger.Logger, *bytes.Buffer) {
+	buf := bytes.NewBuffer(nil)
+	logrusLogger := logrus.New()
+	logrusLogger.Level = logrus.DebugLevel
+	logrusLogger.Out = buf
+	logrusLogger.Formatter = &logrus.TextFormatter{
+		DisableColors:    true,
+		DisableTimestamp: true,
+	}
+	entry := logrus.NewEntry(logrusLogger)
+
+	log := func(ctx logger.Valuer, err error) *logrus.Entry {
+		return logger.ContextLog(ctx, err, entry)
+	}
+
+	return log, buf
 }
