@@ -98,7 +98,7 @@ func TestEmptyContext(t *testing.T) {
 
 func TestWithTags(t *testing.T) {
 	// Test that passing nil doesn't actually crash it, disable the linter
-	ctx := WithTags(nil, Tags{"a": "b", "c": "d"}) //nolint: megacheck
+	ctx := WithTags(nil, Tags{"a": "b", "c": "d"}) //nolint: staticcheck
 	ctx = WithTags(ctx, Tags{"a": "e", "f": "g"})
 
 	// Test it doesn't override

@@ -71,7 +71,7 @@ func TestEmptyContext(t *testing.T) {
 
 func TestWithFields(t *testing.T) {
 	// Test that passing nil doesn't actually crash it, disable the linter
-	ctx := WithFields(nil, logrus.Fields{"a": "b", "c": "d"}) //nolint: megacheck
+	ctx := WithFields(nil, logrus.Fields{"a": "b", "c": "d"}) //nolint: staticcheck
 	ctx = WithFields(ctx, logrus.Fields{"a": "e", "f": "g"})
 
 	// Test overrides
@@ -105,7 +105,7 @@ func TestWithLoggable(t *testing.T) {
 
 func TestWithField(t *testing.T) {
 	// Test that passing nil doesn't actually crash it, disable the linter
-	ctx := WithField(nil, "a", "b") //nolint: megacheck
+	ctx := WithField(nil, "a", "b") //nolint: staticcheck
 	ctx = WithField(ctx, "c", "d")
 	ctx = WithField(ctx, "c", "e")
 
