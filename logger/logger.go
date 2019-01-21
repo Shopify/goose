@@ -1,6 +1,8 @@
 package logger
 
 import (
+	"context"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -43,9 +45,9 @@ func ContextLog(ctx Valuer, err error, entry *logrus.Entry) *logrus.Entry {
 // LogIfError makes it less verbose to defer a Close() call while
 // handling an unlikely-but-possible error return by logging it. Example:
 //
-//   defer LogIfError(f.Close, log, "failed to close file")
-func LogIfError(fn func() error, logger Logger, msg string) {
+//   defer LogIfError(ctx, f.Close, log, "failed to close file")
+func LogIfError(ctx context.Context, fn func() error, logger Logger, msg string) {
 	if err := fn(); err != nil {
-		logger(nil, err).Error(msg)
+		logger(ctx, err).Error(msg)
 	}
 }
