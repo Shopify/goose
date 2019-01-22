@@ -136,7 +136,7 @@ func (s *store) lock(ctx context.Context, key string) (bool, error) {
 		err = nil
 	}
 
-	return false, nil
+	return false, err
 }
 
 func (s *store) isLocked(ctx context.Context, key string) (bool, error) {
