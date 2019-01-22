@@ -21,13 +21,7 @@ func buildLogger() (Logger, *bytes.Buffer) {
 	entry := logrus.NewEntry(logrusLogger)
 
 	logger := func(ctx Valuer, err error) *logrus.Entry {
-		entry = entry.WithField("error", err)
-
-		if _, ok := err.(causer); ok {
-			entry = entry.WithField("cause", errors.Cause(err))
-		}
-
-		return entry
+		return ContextLog(ctx, err, entry)
 	}
 
 	return logger, buf
@@ -58,17 +52,25 @@ func TestContextLog(t *testing.T) {
 }
 
 func TestLogIfError(t *testing.T) {
+	ctx := context.Background()
 	{
 		logger, buf := buildLogger()
 		fn := func() error { return nil }
-		LogIfError(fn, logger, "")
+		LogIfError(ctx, fn, logger, "")
 		assert.Equal(t, "", buf.String())
 	}
 	{
 		logger, buf := buildLogger()
 		fn := func() error { return errors.New("foo") }
-		LogIfError(fn, logger, "msg")
+		LogIfError(ctx, fn, logger, "msg")
 		assert.Equal(t, "level=error msg=msg error=foo\n", buf.String())
+	}
+	{
+		logger, buf := buildLogger()
+		fn := func() error { return errors.New("foo") }
+		ctx := WithField(ctx, "test", "bar")
+		LogIfError(ctx, fn, logger, "msg")
+		assert.Equal(t, "level=error msg=msg error=foo test=bar\n", buf.String())
 	}
 	{
 		logger, buf := buildLogger()
@@ -77,7 +79,7 @@ func TestLogIfError(t *testing.T) {
 			err := nestedFn()
 			return errors.Wrap(err, "err_msg")
 		}
-		LogIfError(fn, logger, "msg")
+		LogIfError(ctx, fn, logger, "msg")
 		assert.Equal(t, "level=error msg=msg cause=root_cause error=\"err_msg: root_cause\"\n", buf.String())
 	}
 }
