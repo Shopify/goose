@@ -1,7 +1,6 @@
 package srvutil
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -17,6 +16,7 @@ import (
 
 	"github.com/Shopify/goose/logger"
 	"github.com/Shopify/goose/safely"
+	"github.com/Shopify/goose/syncio"
 )
 
 func ExampleNewServer() {
@@ -66,7 +66,6 @@ func TestNewServer(t *testing.T) {
 	t.Logf("test server running on %s", u)
 
 	assert.Contains(t, logOutput.String(), "level=info msg=\"starting server\" bind=\"127.0.0.1:0\"")
-	assert.Contains(t, logOutput.String(), fmt.Sprintf("level=info msg=\"started server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
 
 	// Works
 	res, err := http.Get(u)
@@ -81,6 +80,7 @@ func TestNewServer(t *testing.T) {
 	tb.Kill(errors.New("testing"))
 	<-tb.Dead()
 
+	assert.Contains(t, logOutput.String(), fmt.Sprintf("level=info msg=\"started server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
 	assert.Contains(t, logOutput.String(), fmt.Sprintf("level=debug msg=\"stopped server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
 
 	// No longer works
@@ -92,8 +92,8 @@ func TestNewServer(t *testing.T) {
 	assert.Equal(t, "great success", string(body))
 }
 
-func buildLogger() (logger.Logger, *bytes.Buffer) {
-	buf := bytes.NewBuffer(nil)
+func buildLogger() (logger.Logger, *syncio.Buffer) {
+	buf := syncio.NewBuffer(nil)
 	logrusLogger := logrus.New()
 	logrusLogger.Level = logrus.DebugLevel
 	logrusLogger.Out = buf
