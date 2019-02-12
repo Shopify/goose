@@ -11,11 +11,16 @@ import (
 // such that it can return the desired data.
 type Getter interface {
 	Wait(ctx context.Context) (*Item, error)
+	WouldWait() bool
 }
 
 // resolvedGetter is essentially a noop, the data is already available.
 type resolvedGetter struct {
 	item *Item
+}
+
+func (g *resolvedGetter) WouldWait() bool {
+	return false
 }
 
 func (g *resolvedGetter) Wait(ctx context.Context) (*Item, error) {
@@ -28,6 +33,10 @@ type promiseGetter struct {
 	key     string
 	store   Store
 	promise lockmap.Promise
+}
+
+func (g *promiseGetter) WouldWait() bool {
+	return true
 }
 
 func (g *promiseGetter) Wait(ctx context.Context) (*Item, error) {
@@ -46,6 +55,10 @@ const pollingInterval = 100 * time.Millisecond
 type pollGetter struct {
 	key   string
 	store Store
+}
+
+func (g *pollGetter) WouldWait() bool {
+	return true
 }
 
 func (g *pollGetter) Wait(ctx context.Context) (*Item, error) {
