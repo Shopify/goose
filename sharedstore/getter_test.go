@@ -10,7 +10,7 @@ import (
 	"github.com/Shopify/goose/logger"
 )
 
-func Test_condGetter(t *testing.T) {
+func Test_promiseGetter(t *testing.T) {
 	client := memoryClient{}
 	ctx := logger.WithLoggable(context.Background(), &client)
 	store := New(&client, time.Second)
@@ -23,6 +23,7 @@ func Test_condGetter(t *testing.T) {
 
 	sub2, prov2 := store.GetOrLock(ctx, "foo")
 	assert.IsType(t, &promiseGetter{}, sub2, "should have a getter")
+	assert.True(t, sub2.WouldWait(ctx))
 	assert.IsType(t, &setter{}, prov2, "should have a setter")
 
 	done := make(chan *Item)
@@ -39,14 +40,16 @@ func Test_condGetter(t *testing.T) {
 	select {
 	case item := <-done:
 		assert.Equal(t, "bar", item.Data.(string))
+		assert.False(t, sub2.WouldWait(ctx), "should not wait after done")
 	case <-time.After(1 * time.Second):
 		assert.Fail(t, "took too long to complete")
 	}
 }
 
-func Test_lockGetter(t *testing.T) {
+func Test_pollGetter(t *testing.T) {
 	client := memoryClient{}
 	ctx := logger.WithLoggable(context.Background(), &client)
+	ctx, cancel := context.WithCancel(ctx)
 	store := New(&client, time.Second)
 	store.Tomb().Go(store.Run)
 
@@ -61,6 +64,7 @@ func Test_lockGetter(t *testing.T) {
 
 	sub2, prov2 := store2.GetOrLock(ctx, "foo")
 	assert.IsType(t, &pollGetter{}, sub2, "should have a getter")
+	assert.True(t, sub2.WouldWait(ctx))
 	assert.IsType(t, &setter{}, prov2, "should have a setter")
 
 	done := make(chan *Item)
@@ -77,12 +81,16 @@ func Test_lockGetter(t *testing.T) {
 	select {
 	case item := <-done:
 		assert.Equal(t, "bar", item.Data.(string))
+		assert.True(t, sub2.WouldWait(ctx), "should still advertise it would wait after done")
 	case <-time.After(1 * time.Second):
 		assert.Fail(t, "took too long to complete")
 	}
+
+	cancel()
+	assert.False(t, sub2.WouldWait(ctx), "should not wait after ctx is done")
 }
 
-func Test_condGetter_other_instance(t *testing.T) {
+func Test_promiseGetter_other_instance(t *testing.T) {
 	client := memoryClient{}
 	ctx := logger.WithLoggable(context.Background(), &client)
 	store := New(&client, time.Second)
