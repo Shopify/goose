@@ -43,6 +43,7 @@ type wrapper struct {
 	cmd *exec.Cmd
 
 	path            string
+	dir             string
 	args            []string
 	env             []string
 	osEnv           bool

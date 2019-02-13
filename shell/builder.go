@@ -13,6 +13,7 @@ import (
 type Builder interface {
 	WithOSEnv() Builder
 	WithEnv(env Env) Builder
+	WithWorkingDir(dir string) Builder
 	WithSysProcAttr(attr *syscall.SysProcAttr) Builder
 	WithContextCancellation(gracefulTimeout time.Duration) Builder
 	Prepare() Supervisor
@@ -20,6 +21,11 @@ type Builder interface {
 
 func (w *wrapper) WithOSEnv() Builder {
 	w.osEnv = true
+	return w
+}
+
+func (w *wrapper) WithWorkingDir(dir string) Builder {
+	w.dir = dir
 	return w
 }
 
@@ -62,6 +68,8 @@ func (w *wrapper) Prepare() Supervisor {
 		env = append(env, os.Environ()...)
 	}
 	cmd.Env = env
+
+	cmd.Dir = w.dir
 
 	w.cmd = cmd
 
