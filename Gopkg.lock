@@ -18,6 +18,14 @@
   version = "v0.5.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:339bac0d398920a11fd7e8a7fbd4f133d4edd4faa1c2cbaba256d3684a266019"
+  name = "github.com/bradfitz/gomemcache"
+  packages = ["memcache"]
+  pruneopts = ""
+  revision = "bc664df9673713a0ccf26e3b55a673ec7301088b"
+
+[[projects]]
   digest = "1:4a7b6a852e018acafd79bf345944a9b2a332ebb968593ff36edadd3677ebb019"
   name = "github.com/bugsnag/bugsnag-go"
   packages = [
@@ -169,6 +177,7 @@
   input-imports = [
     "github.com/DataDog/datadog-go/statsd",
     "github.com/bitly/go-simplejson",
+    "github.com/bradfitz/gomemcache/memcache",
     "github.com/bugsnag/bugsnag-go",
     "github.com/bugsnag/bugsnag-go/errors",
     "github.com/gorilla/mux",
