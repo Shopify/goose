@@ -11,7 +11,7 @@ import (
 // such that it can return the desired data.
 type Getter interface {
 	Wait(ctx context.Context) (*Item, error)
-	WouldWait() bool
+	WouldWait(ctx context.Context) bool
 }
 
 // resolvedGetter is essentially a noop, the data is already available.
@@ -19,7 +19,7 @@ type resolvedGetter struct {
 	item *Item
 }
 
-func (g *resolvedGetter) WouldWait() bool {
+func (g *resolvedGetter) WouldWait(ctx context.Context) bool {
 	return false
 }
 
@@ -35,8 +35,15 @@ type promiseGetter struct {
 	promise lockmap.Promise
 }
 
-func (g *promiseGetter) WouldWait() bool {
-	return true
+func (g *promiseGetter) WouldWait(ctx context.Context) bool {
+	select {
+	case <-g.promise:
+		return false
+	case <-ctx.Done():
+		return false
+	default:
+		return true
+	}
 }
 
 func (g *promiseGetter) Wait(ctx context.Context) (*Item, error) {
@@ -57,8 +64,14 @@ type pollGetter struct {
 	store Store
 }
 
-func (g *pollGetter) WouldWait() bool {
-	return true
+func (g *pollGetter) WouldWait(ctx context.Context) bool {
+	select {
+	case <-ctx.Done():
+		return false
+	default:
+		// Checking this would require a call to the shared store, so assume it would wait.
+		return true
+	}
 }
 
 func (g *pollGetter) Wait(ctx context.Context) (*Item, error) {
