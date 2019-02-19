@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"path/filepath"
 	"sync"
 	"syscall"
 	"testing"
@@ -173,6 +174,19 @@ func TestCommandRunWaitPipeFails(t *testing.T) {
 	// Calling ReadAll will wait for the pipe to close, so all the output is there.
 	_, err = ioutil.ReadAll(pipe)
 	assert.Error(t, err, "read |0: file already closed")
+}
+
+func TestCommandWithWorkingDir(t *testing.T) {
+	ctx := context.Background()
+	stdout, _, err := NewBuilder(ctx, "pwd").
+		WithWorkingDir("/tmp").
+		Prepare().
+		RunAndGetOutput()
+
+	assert.NoError(t, err)
+	expected, err := filepath.EvalSymlinks("/tmp")
+	assert.NoError(t, err)
+	assert.Equal(t, []byte(expected+"\n"), stdout)
 }
 
 func TestCommandEnvDoesNotEval(t *testing.T) {
