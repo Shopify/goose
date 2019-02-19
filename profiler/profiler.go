@@ -17,7 +17,7 @@ type Profiler interface {
 	End() error
 }
 
-func New(cpuFile string, memoryFile string) Profiler {
+func NewProfiler(cpuFile string, memoryFile string) Profiler {
 	var profilers []Profiler
 	if cpuFile != "" {
 		profilers = append(profilers, &cpuProfiler{filePath: cpuFile})

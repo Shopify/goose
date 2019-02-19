@@ -64,6 +64,30 @@
   version = "v3.1.2"
 
 [[projects]]
+  branch = "master"
+  digest = "1:1ad4c037735491fc9c7ae734f9ddf6bf3dd9505833ff76c28a3054fb884ff3cc"
+  name = "github.com/google/pprof"
+  packages = [
+    "driver",
+    "internal/binutils",
+    "internal/driver",
+    "internal/elfexec",
+    "internal/graph",
+    "internal/measurement",
+    "internal/plugin",
+    "internal/report",
+    "internal/symbolizer",
+    "internal/symbolz",
+    "internal/transport",
+    "profile",
+    "third_party/d3",
+    "third_party/d3flamegraph",
+    "third_party/svgpan",
+  ]
+  pruneopts = ""
+  revision = "b421f19a5c07fe0eb5b553c4c3d681fdfcb80f26"
+
+[[projects]]
   branch = "subrouter-match-err"
   digest = "1:88f974cc48e2ab70f8cd167443bee35de7e7b99e12a6d73aa86aaa37be2c5c52"
   name = "github.com/gorilla/mux"
@@ -71,6 +95,14 @@
   pruneopts = ""
   revision = "63803a6dfc26397890ca526fd51c5518b5311b0e"
   source = "https://github.com/lavoiesl/mux.git"
+
+[[projects]]
+  branch = "master"
+  digest = "1:375f95ad271c91ca806948bee3dbca17af8586f02f0548626da22fa21ab2646b"
+  name = "github.com/ianlancetaylor/demangle"
+  packages = ["."]
+  pruneopts = ""
+  revision = "5e5cf60278f657d30daa329dd0e7e893b6b8f027"
 
 [[projects]]
   digest = "1:7ab38c15bd21e056e3115c8b526d201eaf74e0308da9370997c6b3c187115d36"
@@ -180,6 +212,7 @@
     "github.com/bradfitz/gomemcache/memcache",
     "github.com/bugsnag/bugsnag-go",
     "github.com/bugsnag/bugsnag-go/errors",
+    "github.com/google/pprof/driver",
     "github.com/gorilla/mux",
     "github.com/imdario/mergo",
     "github.com/nu7hatch/gouuid",
