@@ -18,12 +18,14 @@ import (
 
 var log = logger.New("oauth")
 
-const domain = "shopify.com"
 const cookieName = "oauthSession"
 const tokenCookieKey = "token"
 
 // Manager wraps all the logic and configuration of the OAuth flow.
 type Manager interface {
+	// SetAuthCodeOptions configures extra options for OAuth
+	SetAuthCodeOptions(opts ...oauth2.AuthCodeOption)
+
 	// GetLoginURL builds a URL pointing to the login page to start the auth flow
 	// `origin` is the URL the user should redirected to once the login completes
 	GetLoginURL(ctx context.Context, origin string) (string, error)
@@ -81,6 +83,11 @@ type manager struct {
 	tokenStore    sessions.Store
 	authenticator Authenticator
 	authorizer    Authorizer
+	authCodeOpts  []oauth2.AuthCodeOption
+}
+
+func (m *manager) SetAuthCodeOptions(opts ...oauth2.AuthCodeOption) {
+	m.authCodeOpts = opts
 }
 
 // Parameters come from Google redirecting to /oauth?state=STATE&code=CODE
@@ -129,7 +136,7 @@ func (m *manager) GetLoginURL(ctx context.Context, origin string) (string, error
 		return "", err
 	}
 
-	return m.oauthConfig.AuthCodeURL(encState, oauth2.SetAuthURLParam("hd", domain)), nil
+	return m.oauthConfig.AuthCodeURL(encState, m.authCodeOpts...), nil
 }
 
 func (m *manager) GetClient(ctx context.Context, token *oauth2.Token) *http.Client {

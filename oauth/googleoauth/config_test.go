@@ -22,5 +22,6 @@ func ExampleNewConfig() {
 		oauth.NewDomainAuthorizer("example.com"),
 	)
 
-	_ = oauth.NewManager(config, googleoauth.Authenticator, authorizer)
+	m := oauth.NewManager(config, googleoauth.Authenticator, authorizer)
+	m.SetAuthCodeOptions(googleoauth.PreferredDomain("example.com"))
 }

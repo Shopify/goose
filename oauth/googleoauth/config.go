@@ -19,3 +19,8 @@ func NewConfig(clientID string, clientSecret string, paths *oauth.Paths) *oauth2
 		Endpoint: google.Endpoint,
 	}
 }
+
+// PreferredDomain instructs Google to prefer this domain when prompting the user to login
+func PreferredDomain(domain string) oauth2.AuthCodeOption {
+	return oauth2.SetAuthURLParam("hd", domain)
+}
