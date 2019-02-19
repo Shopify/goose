@@ -52,7 +52,7 @@ func RequestMetricsMiddleware(next http.Handler) http.Handler {
 
 		headers := &bytes.Buffer{}
 		// Ignore headers that may contains sensitive information.
-		r.Header.WriteSubset(headers, map[string]bool{
+		_ = r.Header.WriteSubset(headers, map[string]bool{
 			"Authorization": true,
 			"Cookie":        true,
 		})
@@ -62,13 +62,13 @@ func RequestMetricsMiddleware(next http.Handler) http.Handler {
 			WithField("headers", headers).
 			Debug("http request")
 
-		metrics.HTTPRequest.Time(ctx, func() error {
+		_ = metrics.HTTPRequest.Time(ctx, func() error {
 			next.ServeHTTP(recorder, r)
 			return nil
 		})
 
 		headers = &bytes.Buffer{}
-		w.Header().WriteSubset(headers, map[string]bool{
+		_ = w.Header().WriteSubset(headers, map[string]bool{
 			"Set-Cookie": true,
 		})
 

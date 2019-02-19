@@ -1,0 +1,37 @@
+run:
+  deadline: 5m
+  skip-files:
+    - "_mock\\.go$"
+
+output:
+  # colored-line-number|line-number|json|tab|checkstyle|code-climate, default is "colored-line-number"
+  format: colored-line-number
+
+linters:
+  enable:
+    - depguard
+    - goconst
+    - gocritic
+    - gofmt
+    - goimports
+    - golint
+    - gosec
+    - maligned
+    - misspell
+    - nakedret
+    - prealloc
+    - prealloc
+    - stylecheck
+    - unconvert
+    - unparam
+
+issues:
+  # Excluding configuration per-path and per-linter
+  exclude-rules:
+    # Exclude some linters from running on tests files.
+    - path: "_test\\.go$"
+      linters:
+        - dupl
+        - errcheck
+        - gocyclo
+        - gosec

@@ -4,10 +4,7 @@ up:
   - go:
       version: "1.11.2"
       tools:
-        - github.com/alecthomas/gometalinter
-        # gosumcheck is not installed by gometalinter
-        - github.com/haya14busa/gosum/cmd/gosumcheck
-        - github.com/burke/goenumcheck/cmd/goenumcheck
+        - github.com/golangci/golangci-lint/cmd/golangci-lint
 
 commands:
   doc-server: |

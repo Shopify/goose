@@ -46,8 +46,8 @@ type wrapper struct {
 	args            []string
 	env             []string
 	osEnv           bool
-	sysProcAttr     *syscall.SysProcAttr
 	ctxCancellation bool
+	sysProcAttr     *syscall.SysProcAttr
 
 	// When a context is provided and it is cancelled while the process is
 	// running, we send SIGTERM to the process. if, after this period, the

@@ -36,10 +36,8 @@ func (w *wrapper) WithEnv(env Env) Builder {
 func (w *wrapper) WithSysProcAttr(attr *syscall.SysProcAttr) Builder {
 	if w.sysProcAttr == nil {
 		w.sysProcAttr = attr
-	} else {
-		if err := mergo.Merge(w.sysProcAttr, *attr); err != nil {
-			panic(errors.Wrap(err, "unable to merge SysProcAttr"))
-		}
+	} else if err := mergo.Merge(w.sysProcAttr, *attr); err != nil {
+		panic(errors.Wrap(err, "unable to merge SysProcAttr"))
 	}
 	return w
 }

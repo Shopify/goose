@@ -97,7 +97,7 @@ func (s *successTimerSetFinisher) SuccessFinish(errp *error) {
 		} else {
 			s.set.Failure.Incr(s.ctx, tags...)
 		}
-		tags = append(s.tags, Tags{"success": success})
+		tags = append(tags, Tags{"success": success})
 	}
 	s.set.Duration.Duration(s.ctx, time.Since(s.startTime), tags...)
 }
