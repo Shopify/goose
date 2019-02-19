@@ -2,8 +2,8 @@ package logrusbugsnag
 
 import (
 	"errors"
+	"regexp"
 	"runtime"
-	"strings"
 
 	"github.com/bugsnag/bugsnag-go"
 	bugsnag_errors "github.com/bugsnag/bugsnag-go/errors"
@@ -103,7 +103,8 @@ func (hook *Hook) Fire(entry *logrus.Entry) error {
 }
 
 const goPanic = "runtime.gopanic"
-const logrusPackage = "github.com/sirupsen/logrus/"
+
+var logrusPackage = regexp.MustCompile("/github\\.com/sirupsen/logrus[/@]")
 
 func findLogrusExit() int {
 	stack := make([]uintptr, 12)
@@ -114,7 +115,7 @@ func findLogrusExit() int {
 	for i := 0; ; i++ {
 		frame, more := frames.Next()
 		switch {
-		case strings.Contains(frame.File, logrusPackage):
+		case logrusPackage.MatchString(frame.File):
 			if !foundLogrus {
 				foundLogrus = true
 			}

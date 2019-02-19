@@ -6,7 +6,7 @@ require 'open3'
 class Style
   class << self
     def call
-      abort "#$0 must be run from root of Go project" unless File.exist?('Gopkg.toml') 
+      abort "#$0 must be run from root of Go project" unless File.exist?('go.mod') || File.exist?('Gopkg.toml')
 
       run_full_lint(ARGV)
     end
