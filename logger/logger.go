@@ -13,11 +13,19 @@ type causer interface {
 
 var GlobalFields = logrus.Fields{}
 
-type Logger func(Valuer, error) *logrus.Entry
+type Logger func(Valuer, ...error) *logrus.Entry
 
 func New(name string) Logger {
-	return func(ctx Valuer, err error) *logrus.Entry {
-		return ContextLog(ctx, err, nil).WithField("component", name)
+	return func(ctx Valuer, err ...error) *logrus.Entry {
+		switch len(err) {
+		case 0:
+			return ContextLog(ctx, nil, nil).WithField("component", name)
+		case 1:
+			return ContextLog(ctx, err[0], nil).WithField("component", name)
+		default:
+			ContextLog(ctx, nil, nil).WithField("component", name).Errorf("%d errors provided, expected 0 or 1", len(err))
+			return ContextLog(ctx, nil, nil).WithField("component", name)
+		}
 	}
 }
 

@@ -20,20 +20,64 @@ func buildLogger() (Logger, *bytes.Buffer) {
 	}
 	entry := logrus.NewEntry(logrusLogger)
 
-	logger := func(ctx Valuer, err error) *logrus.Entry {
-		return ContextLog(ctx, err, entry)
+	logger := func(ctx Valuer, err ...error) *logrus.Entry {
+		if len(err) == 0 {
+			return ContextLog(ctx, nil, entry)
+		}
+		return ContextLog(ctx, err[0], entry)
 	}
 
 	return logger, buf
 }
 
-func TestContextLog(t *testing.T) {
-	logger := New("foo")
-
+func TestNew_OptionalErr(t *testing.T) {
 	origGlobal := logrus.Fields{}
 	for k, v := range GlobalFields {
 		origGlobal[k] = v
 	}
+	defer func() { GlobalFields = origGlobal }()
+
+	t.Run("with err", func(t *testing.T) {
+		logger := New("foo")
+		ctx := context.Background()
+		err := errors.New("bad stuff")
+		entry := logger(ctx, err).WithField("a", "b")
+		assert.Equal(t, logrus.Fields{
+			"component": "foo",
+			"a":         "b",
+			"error":     err,
+		}, entry.Data)
+	})
+
+	t.Run("without err", func(t *testing.T) {
+		logger := New("foo")
+		ctx := context.Background()
+		entry := logger(ctx).WithField("a", "b")
+		assert.Equal(t, logrus.Fields{
+			"component": "foo",
+			"a":         "b",
+		}, entry.Data)
+	})
+
+	t.Run("with too many errors", func(t *testing.T) {
+		logger := New("foo")
+		ctx := context.Background()
+		entry := logger(ctx, errors.New("a"), errors.New("b")).WithField("a", "b")
+		assert.Equal(t, logrus.Fields{
+			"component": "foo",
+			"a":         "b",
+		}, entry.Data)
+	})
+}
+
+func TestContextLog(t *testing.T) {
+	origGlobal := logrus.Fields{}
+	for k, v := range GlobalFields {
+		origGlobal[k] = v
+	}
+	defer func() { GlobalFields = origGlobal }()
+
+	logger := New("foo")
 
 	GlobalFields["testKey"] = "value"
 
@@ -46,9 +90,6 @@ func TestContextLog(t *testing.T) {
 		"a":         "b",
 		"testKey":   "value",
 	}, entry.Data)
-
-	// Restore
-	GlobalFields = origGlobal
 }
 
 func TestLogIfError(t *testing.T) {
