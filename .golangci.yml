@@ -2,6 +2,7 @@ run:
   deadline: 5m
   skip-files:
     - "_mock\\.go$"
+    - "\\.pb\\.go$"
 
 output:
   # colored-line-number|line-number|json|tab|checkstyle|code-climate, default is "colored-line-number"
@@ -10,12 +11,14 @@ output:
 linters:
   enable:
     - depguard
+    - dupl
     - goconst
     - gocritic
     - gofmt
     - goimports
     - golint
     - gosec
+    - lll
     - maligned
     - misspell
     - nakedret
@@ -24,6 +27,23 @@ linters:
     - stylecheck
     - unconvert
     - unparam
+
+linters-settings:
+  dupl:
+    threshold: 100
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  goimports:
+    # put imports beginning with prefix after 3rd-party packages;
+    # it's a comma-separated list of prefixes
+    local-prefixes: github.com/Shopify/goose
+  golint:
+    min-confidence: 0
+  lll:
+    line-length: 140
+  maligned:
+    suggest-new: true
 
 issues:
   # Excluding configuration per-path and per-linter
@@ -35,3 +55,4 @@ issues:
         - errcheck
         - gocyclo
         - gosec
+        - lll
