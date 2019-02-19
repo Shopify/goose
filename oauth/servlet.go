@@ -74,6 +74,7 @@ func (s *servlet) authorize(w http.ResponseWriter, r *http.Request) (*User, erro
 		return nil, ErrUnauthenticated
 	}
 
+	// TODO: Cache the user for this authorization to reduce network calls
 	user, err := s.manager.AuthorizeToken(ctx, token)
 	if err != nil {
 		return nil, err

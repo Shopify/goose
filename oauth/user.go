@@ -6,6 +6,14 @@ import (
 	"github.com/Shopify/goose/statsd"
 )
 
+var (
+	// LogUserEmail toggles logging the user's email, which can be sensitive.
+	LogUserEmail = false
+
+	// LogUserProfile toggles logging the user id, which seems appropriate in most cases.
+	LogUserProfile = true
+)
+
 // User is a retrieved and authenticated user.
 // Corresponds to https://www.googleapis.com/oauth2/v3/userinfo, but it meant to be used as an abstract user
 type User struct {
@@ -22,9 +30,14 @@ type User struct {
 }
 
 func (u *User) LogFields() logrus.Fields {
-	return logrus.Fields{
-		"email": u.Email,
+	f := logrus.Fields{}
+	if LogUserEmail {
+		f["email"] = u.Email
 	}
+	if LogUserProfile {
+		f["profile"] = u.Profile
+	}
+	return f
 }
 
 func (u *User) StatsTags() statsd.Tags {
