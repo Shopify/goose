@@ -21,10 +21,7 @@ func buildLogger() (Logger, *bytes.Buffer) {
 	entry := logrus.NewEntry(logrusLogger)
 
 	logger := func(ctx Valuer, err ...error) *logrus.Entry {
-		if len(err) == 0 {
-			return ContextLog(ctx, nil, entry)
-		}
-		return ContextLog(ctx, err[0], entry)
+		return ContextLog(ctx, err, entry)
 	}
 
 	return logger, buf
@@ -41,7 +38,9 @@ func TestNew_OptionalErr(t *testing.T) {
 		logger := New("foo")
 		ctx := context.Background()
 		err := errors.New("bad stuff")
+
 		entry := logger(ctx, err).WithField("a", "b")
+
 		assert.Equal(t, logrus.Fields{
 			"component": "foo",
 			"a":         "b",
@@ -59,13 +58,43 @@ func TestNew_OptionalErr(t *testing.T) {
 		}, entry.Data)
 	})
 
-	t.Run("with too many errors", func(t *testing.T) {
+	t.Run("with 2 errors", func(t *testing.T) {
 		logger := New("foo")
 		ctx := context.Background()
-		entry := logger(ctx, errors.New("a"), errors.New("b")).WithField("a", "b")
+		err1 := errors.New("bad stuff")
+		err2 := errors.New("also bad stuff")
+
+		entry := logger(ctx, err1, err2).WithField("a", "b")
+
 		assert.Equal(t, logrus.Fields{
 			"component": "foo",
 			"a":         "b",
+			"error":     err1,
+			"error1":    err2,
+		}, entry.Data)
+	})
+
+	t.Run("with several errors", func(t *testing.T) {
+		logger := New("foo")
+		ctx := context.Background()
+		err1 := errors.Wrap(errors.New("err1"), "wrapped1")
+		err2 := errors.New("err2")
+		err3 := errors.New("err3")
+		err4 := errors.Wrap(errors.New("err4"), "wrapped4")
+		err5 := errors.New("err5")
+
+		entry := logger(ctx, err1, err2, err3, err4, err5).WithField("a", "b")
+
+		assert.Equal(t, logrus.Fields{
+			"component": "foo",
+			"a":         "b",
+			"error":     err1,
+			"cause":     errors.Cause(err1),
+			"error1":    err2,
+			"error2":    err3,
+			"error3":    err4,
+			"cause3":    errors.Cause(err4),
+			"error4":    err5,
 		}, entry.Data)
 	})
 }

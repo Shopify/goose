@@ -2,6 +2,7 @@ package logger
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -17,19 +18,14 @@ type Logger func(Valuer, ...error) *logrus.Entry
 
 func New(name string) Logger {
 	return func(ctx Valuer, err ...error) *logrus.Entry {
-		switch len(err) {
-		case 0:
-			return ContextLog(ctx, nil, nil).WithField("component", name)
-		case 1:
-			return ContextLog(ctx, err[0], nil).WithField("component", name)
-		default:
-			ContextLog(ctx, nil, nil).WithField("component", name).Errorf("%d errors provided, expected 0 or 1", len(err))
-			return ContextLog(ctx, nil, nil).WithField("component", name)
+		if len(err) == 1 && err[0] == nil {
+			err = nil
 		}
+		return ContextLog(ctx, err, nil).WithField("component", name)
 	}
 }
 
-func ContextLog(ctx Valuer, err error, entry *logrus.Entry) *logrus.Entry {
+func ContextLog(ctx Valuer, err []error, entry *logrus.Entry) *logrus.Entry {
 	if entry == nil {
 		entry = logrus.NewEntry(logrus.StandardLogger())
 	}
@@ -39,11 +35,20 @@ func ContextLog(ctx Valuer, err error, entry *logrus.Entry) *logrus.Entry {
 		entry = entry.WithFields(getLoggableValues(ctx))
 	}
 
-	if err != nil {
-		entry = entry.WithField("error", err)
+	if len(err) != 0 {
+		err0 := err[0]
+		entry = entry.WithField("error", err0)
 
-		if _, ok := err.(causer); ok {
-			entry = entry.WithField("cause", errors.Cause(err))
+		if _, ok := err0.(causer); ok {
+			entry = entry.WithField("cause", errors.Cause(err0))
+		}
+
+		for i, errX := range err[1:] {
+			entry = entry.WithField(fmt.Sprintf("error%d", i+1), errX)
+
+			if _, ok := errX.(causer); ok {
+				entry = entry.WithField(fmt.Sprintf("cause%d", i+1), errors.Cause(errX))
+			}
 		}
 	}
 
