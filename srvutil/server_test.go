@@ -103,8 +103,8 @@ func buildLogger() (logger.Logger, *syncio.Buffer) {
 	}
 	entry := logrus.NewEntry(logrusLogger)
 
-	log := func(ctx logger.Valuer, err error) *logrus.Entry {
-		return logger.ContextLog(ctx, err, entry)
+	log := func(ctx logger.Valuer, err ...error) *logrus.Entry {
+		return logger.ContextLog(ctx, nil, entry)
 	}
 
 	return log, buf
