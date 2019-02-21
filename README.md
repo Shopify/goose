@@ -4,6 +4,8 @@
 [![GoDoc](https://godoc.org/github.com/Shopify/goose?status.png)](https://godoc.org/github.com/Shopify/goose)
 # goose
 
+![Goose logo](assets/logo.png)
+
 `goose` is a curated collection of Go packages that integrate well together.
 
 
