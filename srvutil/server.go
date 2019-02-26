@@ -2,7 +2,6 @@ package srvutil
 
 import (
 	"context"
-	"errors"
 	"net"
 	"net/http"
 	"time"
@@ -17,9 +16,6 @@ import (
 const (
 	keepAlivePeriod = 3 * time.Minute
 )
-
-// ErrStopped indicates the server was stopped by a request to the Tomb.
-var ErrStopped = errors.New("stopped")
 
 // Server wraps an http.Server to make it runnable and stoppable
 // If its tomb dies, the server will be stopped
@@ -105,7 +101,7 @@ type stoppableKeepaliveListener struct {
 func (ln stoppableKeepaliveListener) Accept() (net.Conn, error) {
 	for {
 		if !ln.tomb.Alive() {
-			return nil, ErrStopped
+			return nil, http.ErrServerClosed
 		}
 
 		if err := ln.SetDeadline(time.Now().Add(500 * time.Millisecond)); err != nil {
