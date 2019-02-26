@@ -81,6 +81,18 @@ func (c *server) Run() error {
 		TCPListener: ln.(*net.TCPListener),
 		tomb:        c.tomb,
 	}
+
+	go func() {
+		<-c.tomb.Dying()
+
+		// Call Shutdown to make allow in-flight requests to gracefully complete
+		ctx := context.Background()
+		err := c.Shutdown(ctx)
+		if err != nil {
+			log(ctx, err).Warn("error shutting down server")
+		}
+	}()
+
 	return c.Serve(listener)
 }
 
@@ -92,10 +104,8 @@ type stoppableKeepaliveListener struct {
 
 func (ln stoppableKeepaliveListener) Accept() (net.Conn, error) {
 	for {
-		select {
-		case <-ln.tomb.Dying():
+		if !ln.tomb.Alive() {
 			return nil, ErrStopped
-		default:
 		}
 
 		if err := ln.SetDeadline(time.Now().Add(500 * time.Millisecond)); err != nil {

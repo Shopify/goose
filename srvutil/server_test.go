@@ -85,11 +85,9 @@ func TestNewServer(t *testing.T) {
 
 	// No longer works
 	res, err = http.Get(u)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-	body, err = ioutil.ReadAll(res.Body)
-	assert.NoError(t, err)
-	assert.Equal(t, "great success", string(body))
+	errMsg := fmt.Sprintf("Get %s: dial tcp %s: connect: connection refused", u, s.Addr().String())
+	assert.EqualError(t, err, errMsg)
+	assert.Nil(t, res)
 }
 
 func buildLogger() (logger.Logger, *syncio.Buffer) {
