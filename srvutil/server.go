@@ -92,17 +92,17 @@ type stoppableKeepaliveListener struct {
 
 func (ln stoppableKeepaliveListener) Accept() (net.Conn, error) {
 	for {
-		if err := ln.SetDeadline(time.Now().Add(500 * time.Millisecond)); err != nil {
-			return nil, err
-		}
-
-		tc, err := ln.AcceptTCP()
-
 		select {
 		case <-ln.tomb.Dying():
 			return nil, ErrStopped
 		default:
 		}
+
+		if err := ln.SetDeadline(time.Now().Add(500 * time.Millisecond)); err != nil {
+			return nil, err
+		}
+
+		tc, err := ln.AcceptTCP()
 
 		if err != nil {
 			netErr, ok := err.(net.Error)
