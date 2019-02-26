@@ -82,7 +82,7 @@ func (c *server) Run() error {
 		<-c.tomb.Dying()
 		log(ctx, c.tomb.Err()).Info("shutting down server")
 
-		// Call Shutdown to make allow in-flight requests to gracefully complete
+		// Call Shutdown to allow in-flight requests to gracefully complete.
 		ctx := context.Background()
 		err := c.Shutdown(ctx)
 		if err != nil {
