@@ -2,7 +2,6 @@ package srvutil
 
 import (
 	"context"
-	"errors"
 	"net"
 	"net/http"
 	"time"
@@ -17,9 +16,6 @@ import (
 const (
 	keepAlivePeriod = 3 * time.Minute
 )
-
-// ErrStopped indicates the server was stopped by a request to the Tomb.
-var ErrStopped = errors.New("stopped")
 
 // Server wraps an http.Server to make it runnable and stoppable
 // If its tomb dies, the server will be stopped
@@ -81,6 +77,19 @@ func (c *server) Run() error {
 		TCPListener: ln.(*net.TCPListener),
 		tomb:        c.tomb,
 	}
+
+	go func() {
+		<-c.tomb.Dying()
+		log(ctx, c.tomb.Err()).Info("shutting down server")
+
+		// Call Shutdown to allow in-flight requests to gracefully complete.
+		ctx := context.Background()
+		err := c.Shutdown(ctx)
+		if err != nil {
+			log(ctx, err).Warn("error shutting down server")
+		}
+	}()
+
 	return c.Serve(listener)
 }
 
@@ -92,17 +101,15 @@ type stoppableKeepaliveListener struct {
 
 func (ln stoppableKeepaliveListener) Accept() (net.Conn, error) {
 	for {
+		if !ln.tomb.Alive() {
+			return nil, http.ErrServerClosed
+		}
+
 		if err := ln.SetDeadline(time.Now().Add(500 * time.Millisecond)); err != nil {
 			return nil, err
 		}
 
 		tc, err := ln.AcceptTCP()
-
-		select {
-		case <-ln.tomb.Dying():
-			return nil, ErrStopped
-		default:
-		}
 
 		if err != nil {
 			netErr, ok := err.(net.Error)
