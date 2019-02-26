@@ -80,6 +80,7 @@ func (c *server) Run() error {
 
 	go func() {
 		<-c.tomb.Dying()
+		log(ctx, c.tomb.Err()).Info("shutting down server")
 
 		// Call Shutdown to make allow in-flight requests to gracefully complete
 		ctx := context.Background()
