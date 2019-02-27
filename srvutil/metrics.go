@@ -60,7 +60,7 @@ func RequestMetricsMiddleware(next http.Handler) http.Handler {
 		log(ctx, nil).
 			WithField("method", r.Method).
 			WithField("headers", headers).
-			Debug("http request")
+			Info("http request")
 
 		metrics.HTTPRequest.Time(ctx, func() error {
 			next.ServeHTTP(recorder, r)
@@ -74,6 +74,6 @@ func RequestMetricsMiddleware(next http.Handler) http.Handler {
 
 		log(ctx, nil).
 			WithField("headers", headers).
-			Debug("http response")
+			Info("http response")
 	})
 }
