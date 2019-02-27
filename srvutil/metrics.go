@@ -1,9 +1,9 @@
 package srvutil
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 
@@ -50,7 +50,7 @@ func RequestMetricsMiddleware(next http.Handler) http.Handler {
 		ctx = statsd.WatchingTagLoggable(ctx, recorder)
 		r = r.WithContext(ctx)
 
-		headers := &bytes.Buffer{}
+		headers := &strings.Builder{}
 		// Ignore headers that may contains sensitive information.
 		r.Header.WriteSubset(headers, map[string]bool{
 			"Authorization": true,
@@ -60,20 +60,20 @@ func RequestMetricsMiddleware(next http.Handler) http.Handler {
 		log(ctx, nil).
 			WithField("method", r.Method).
 			WithField("headers", headers).
-			Debug("http request")
+			Info("http request")
 
 		metrics.HTTPRequest.Time(ctx, func() error {
 			next.ServeHTTP(recorder, r)
 			return nil
 		})
 
-		headers = &bytes.Buffer{}
+		headers = &strings.Builder{}
 		w.Header().WriteSubset(headers, map[string]bool{
 			"Set-Cookie": true,
 		})
 
 		log(ctx, nil).
 			WithField("headers", headers).
-			Debug("http response")
+			Info("http response")
 	})
 }
