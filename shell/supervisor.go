@@ -3,6 +3,7 @@ package shell
 import (
 	"bytes"
 	"os/exec"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -62,7 +63,13 @@ func (w *wrapper) Wait() (err error) {
 	done := make(chan error, 1)
 
 	go func() {
-		done <- cmd.Wait()
+		err := cmd.Wait()
+		if atomic.LoadUint32(&w.killedByCancel) > 0 {
+			// Normally, the cmd would report it was "terminated".
+			// In reality, the context was canceled and we gracefully stopped it, report as such.
+			err = w.ctx.Err()
+		}
+		done <- err
 	}()
 
 	select {
@@ -71,9 +78,11 @@ func (w *wrapper) Wait() (err error) {
 	case <-w.ctx.Done():
 		log(w.ctx, nil).Info("command was canceled; attempting graceful termination")
 
+		atomic.AddUint32(&w.killedByCancel, 1)
 		err := w.Kill(syscall.SIGTERM)
 		if err != nil {
 			log(w.ctx, err).Warn("unable to sigterm process; attempting killing")
+			atomic.AddUint32(&w.killedByCancel, 1)
 			if err := w.Kill(syscall.SIGKILL); err != nil {
 				return errors.Wrap(err, "unable to kill process")
 			}
@@ -86,6 +95,7 @@ func (w *wrapper) Wait() (err error) {
 			return err
 		case <-time.After(w.gracefulTerminationOnCancelTimeout):
 			log(w.ctx, nil).Warn("command was canceled and did not terminate in time; killing")
+			atomic.AddUint32(&w.killedByCancel, 1)
 			if err := w.Kill(syscall.SIGKILL); err != nil {
 				return errors.Wrap(err, "unable to kill process")
 			}
