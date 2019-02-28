@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/tomb.v2"
 
-	"github.com/Shopify/goose/logger"
 	"github.com/Shopify/goose/safely"
 	"github.com/Shopify/goose/syncio"
 )
@@ -47,10 +46,11 @@ func ExampleNewServer() {
 }
 
 func TestNewServer(t *testing.T) {
-	testLog, logOutput := buildLogger()
-	origLog := log
-	log = testLog
-	defer func() { log = origLog }()
+	logOutput := &syncio.Buffer{}
+	origOut := logrus.StandardLogger().Out
+	logrus.StandardLogger().SetOutput(logOutput)
+	logrus.StandardLogger().SetLevel(logrus.DebugLevel)
+	defer logrus.StandardLogger().SetOutput(origOut)
 
 	tb := &tomb.Tomb{}
 	sl := FuncServlet("/", func(res http.ResponseWriter, req *http.Request) {
@@ -91,10 +91,11 @@ func TestNewServer(t *testing.T) {
 }
 
 func TestStoppableKeepaliveListener_Accept(t *testing.T) {
-	testLog, logOutput := buildLogger()
-	origLog := log
-	log = testLog
-	defer func() { log = origLog }()
+	logOutput := &syncio.Buffer{}
+	origOut := logrus.StandardLogger().Out
+	logrus.StandardLogger().SetOutput(logOutput)
+	logrus.StandardLogger().SetLevel(logrus.DebugLevel)
+	defer logrus.StandardLogger().SetOutput(origOut)
 
 	handling := make(chan struct{})
 
@@ -144,22 +145,4 @@ func TestStoppableKeepaliveListener_Accept(t *testing.T) {
 	errMsg := fmt.Sprintf("Get %s: dial tcp %s: connect: connection refused", u, s.Addr().String())
 	assert.EqualError(t, err, errMsg)
 	assert.Nil(t, res)
-}
-
-func buildLogger() (logger.Logger, *syncio.Buffer) {
-	buf := syncio.NewBuffer(nil)
-	logrusLogger := logrus.New()
-	logrusLogger.Level = logrus.DebugLevel
-	logrusLogger.Out = buf
-	logrusLogger.Formatter = &logrus.TextFormatter{
-		DisableColors:    true,
-		DisableTimestamp: true,
-	}
-	entry := logrus.NewEntry(logrusLogger)
-
-	log := func(ctx logger.Valuer, err ...error) *logrus.Entry {
-		return logger.ContextLog(ctx, nil, entry)
-	}
-
-	return log, buf
 }
