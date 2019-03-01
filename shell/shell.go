@@ -42,15 +42,17 @@ type wrapper struct {
 	ctx context.Context
 	cmd *exec.Cmd
 
-	path            string
-	dir             string
-	args            []string
-	env             []string
-	osEnv           bool
-	sysProcAttr     *syscall.SysProcAttr
-	ctxCancellation bool
+	path        string
+	dir         string
+	args        []string
+	env         []string
+	osEnv       bool
+	sysProcAttr *syscall.SysProcAttr
 
-	// When a context is provided and it is cancelled while the process is
+	ctxCancellation bool
+	killedByCancel  uint32 // Number of times the command was "killed" after the context was canceled.
+
+	// When a context is provided and it is canceled while the process is
 	// running, we send SIGTERM to the process. if, after this period, the
 	// process is still running, we send SIGKILL. If left unspecified, the
 	// default is 3 seconds.

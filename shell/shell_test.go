@@ -216,7 +216,7 @@ func TestCommandContextCancels(t *testing.T) {
 	cancel()
 
 	err = cmd.Wait()
-	assert.Error(t, err)
+	assert.Equal(t, context.Canceled, err)
 	ws := cmd.Cmd().ProcessState.Sys().(syscall.WaitStatus)
 	sig := ws.Signal()
 	assert.Equal(t, "terminated", sig.String())
@@ -246,7 +246,7 @@ func TestCommandForceKills(t *testing.T) {
 	cancel()
 
 	err = cmd.Wait()
-	assert.Error(t, err)
+	assert.Equal(t, context.Canceled, err)
 	ws := cmd.Cmd().ProcessState.Sys().(syscall.WaitStatus)
 	sig := ws.Signal()
 	assert.Equal(t, "killed", sig.String())
