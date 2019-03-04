@@ -88,15 +88,28 @@ func (c *Cond) ContextWait(ctx context.Context) bool {
 }
 
 func (c *Cond) cancelWait() {
-	select {
-	case c.cancel <- struct{}{}:
-		// We succeeded in sending the cancel signal to the thread that wanted to send us something.
-		// That thread will decrease the queue count.
-	default:
-		// Nobody is listening to our cancel signal, decrease queue ourselves.
+	gotLock := make(chan struct{})
+	cancelled := make(chan bool)
+
+	go func() {
 		c.L.Lock()
+		close(gotLock)
+		if <-cancelled {
+			c.L.Unlock()
+			return
+		}
 		c.queue--
 		c.L.Unlock()
+	}()
+
+	select {
+	case c.cancel <- struct{}{}:
+		cancelled <- true
+		// We succeeded in sending the cancel signal to the thread that wanted to send us something.
+		// That thread will decrease the queue count.
+	case <-gotLock:
+		cancelled <- false
+		// Nobody was listening to our cancel signal, the goroutine will decrease the queue count.
 	}
 }
 
