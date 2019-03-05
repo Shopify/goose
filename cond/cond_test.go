@@ -2,8 +2,10 @@ package cond
 
 import (
 	"context"
+	"math/rand"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -350,6 +352,50 @@ func TestRace(t *testing.T) {
 	<-done
 }
 
+func TestCond_Signal_random(t *testing.T) {
+	threads := 10000
+	spread := 25 * time.Millisecond
+
+	c := NewCond(&sync.Mutex{})
+	wg := sync.WaitGroup{}
+	var successes uint32
+
+	wg.Add(2 * threads)
+	for t := 0; t < threads; t++ {
+		go func() {
+			wait := time.Duration(rand.Int63n(int64(spread)))
+			c.L.Lock()
+			if c.TimeoutWait(wait) {
+				atomic.AddUint32(&successes, 1)
+			}
+			c.L.Unlock()
+			wg.Done()
+		}()
+
+		wait := time.Duration(rand.Int63n(int64(spread)))
+		time.AfterFunc(wait, func() {
+			c.L.Lock()
+			c.Signal()
+			c.L.Unlock()
+			wg.Done()
+		})
+	}
+
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(1 * time.Second):
+		t.Fatal("test timeout")
+	}
+
+	assert.InDelta(t, threads/2, successes, float64(threads/4), "roughly half the threads should succeed")
+}
+
 func TestCondSignalStealing(t *testing.T) {
 	for iters := 0; iters < 1000; iters++ {
 		var m sync.Mutex
@@ -384,8 +430,10 @@ func TestCondSignalStealing(t *testing.T) {
 			m.Unlock()
 		}()
 
+		secondWait := make(chan struct{})
 		go func() {
 			m.Lock()
+			close(secondWait)
 			for !done {
 				cond.Wait()
 			}
@@ -401,6 +449,7 @@ func TestCondSignalStealing(t *testing.T) {
 
 		// Release the second waiter in case it didn't get the
 		// broadcast.
+		<-secondWait
 		m.Lock()
 		done = true
 		cond.Broadcast()
