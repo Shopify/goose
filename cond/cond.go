@@ -9,9 +9,18 @@ import (
 )
 
 type Cond struct {
-	L      sync.Locker
-	queue  uint32
+	L     sync.Locker
+	queue uint32
+
+	// signal is the channel used by Signal to notify waiting threads.
+	// Requires the lock to be held by Signal and NOT held by the waiters.
 	signal chan struct{}
+
+	// cancel is the channel used by the waiting threads to notify Signal that they are
+	// no longer waiting for a signal, canceling the send.
+	// This is necessary because there is a race condition where the waiter is no longer waiting,
+	// but the queue count has not yet been decreased.
+	// Requires the lock to be held by Signal and NOT held by the waiters.
 	cancel chan struct{}
 }
 
@@ -37,49 +46,36 @@ func (c *Cond) Wait() {
 // Requires L to be locked.
 // Returns whether it received the signal.
 func (c *Cond) TimeoutWait(d time.Duration) bool {
-	c.queue++
-	c.L.Unlock()
-	defer c.L.Lock()
+	ctx, cancel := context.WithTimeout(context.Background(), d)
+	defer cancel()
 
-	t := time.NewTimer(d)
-	defer t.Stop()
-
-	select {
-	case <-t.C:
-		c.cancelWait()
-		return false
-	case <-c.signal:
-		return true
-	}
+	return c.ContextWait(ctx)
 }
 
 // TombWait waits for a signal while the tomb is not dead.
 // Requires L to be locked.
 // Returns whether it received the signal.
 func (c *Cond) TombWait(t *tomb.Tomb) bool {
-	c.queue++
-	c.L.Unlock()
-	defer c.L.Lock()
-
-	select {
-	case <-t.Dying():
-		c.cancelWait()
-		return false
-	case <-c.signal:
-		return true
-	}
+	return c.waitChan(t.Dying())
 }
 
 // ContextWait waits for a signal while the context is not Done.
 // Requires L to be locked.
 // Returns whether it received the signal.
 func (c *Cond) ContextWait(ctx context.Context) bool {
+	return c.waitChan(ctx.Done())
+}
+
+// waitChan will wait for a signal or bail if ch is emitted.
+// Requires L to be locked.
+// Returns whether it received the signal.
+func (c *Cond) waitChan(ch <-chan struct{}) bool {
 	c.queue++
 	c.L.Unlock()
 	defer c.L.Lock()
 
 	select {
-	case <-ctx.Done():
+	case <-ch:
 		c.cancelWait()
 		return false
 	case <-c.signal:
