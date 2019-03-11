@@ -94,7 +94,9 @@ func (hook *Hook) Fire(entry *logrus.Entry) error {
 	}
 
 	errWithStack := bugsnag_errors.New(notifyErr, skipFrames)
-	bugsnagErr := bugsnag.Notify(errWithStack, metadata)
+
+	// Pass in our own metadata as well as the entry context, which might contain more data that Bugsnag can extract.
+	bugsnagErr := bugsnag.Notify(errWithStack, metadata, entry.Context)
 	if bugsnagErr != nil {
 		return ErrBugsnagSendFailed{bugsnagErr}
 	}

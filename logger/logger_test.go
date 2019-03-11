@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type contextKeyType string
+
 func buildLogger() (Logger, *bytes.Buffer) {
 	buf := bytes.NewBuffer(nil)
 	logrusLogger := logrus.New()
@@ -110,7 +112,8 @@ func TestContextLog(t *testing.T) {
 
 	GlobalFields["testKey"] = "value"
 
-	ctx := context.Background()
+	ctx := context.WithValue(context.Background(), contextKeyType("ctxValue"), "value")
+
 	ctx = WithField(ctx, "bar", "baz")
 	entry := logger(ctx, nil).WithField("a", "b")
 	assert.Equal(t, logrus.Fields{
@@ -119,6 +122,7 @@ func TestContextLog(t *testing.T) {
 		"a":         "b",
 		"testKey":   "value",
 	}, entry.Data)
+	assert.Equal(t, ctx, entry.Context)
 }
 
 func TestLogIfError(t *testing.T) {
