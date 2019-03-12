@@ -33,6 +33,9 @@ func ContextLog(ctx Valuer, err []error, entry *logrus.Entry) *logrus.Entry {
 
 	if ctx != nil {
 		entry = entry.WithFields(getLoggableValues(ctx))
+		if ctx, ok := ctx.(context.Context); ok {
+			entry = entry.WithContext(ctx)
+		}
 	}
 
 	if len(err) != 0 {
