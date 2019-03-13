@@ -2,7 +2,7 @@ name: goose
 
 up:
   - go:
-      version: "1.11.2"
+      version: "1.12"
       tools:
         - github.com/alecthomas/gometalinter
         # gosumcheck is not installed by gometalinter

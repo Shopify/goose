@@ -6,9 +6,12 @@ matrix:
       env: TARGET=test
     - name: "1.11.x unit tests"
       go: "1.11.x"
+      env: TARGET=test
+    - name: "1.12.x unit tests"
+      go: "1.12.x"
       env: TARGET=coverage
     - name: "Linting"
-      go: "1.11.x"
+      go: "1.12.x"
       env: TARGET=style
 before_install:
   # Use authentication for higher limits with go.googlesource.com
