@@ -90,6 +90,86 @@ func TestNewServer(t *testing.T) {
 	assert.Nil(t, res)
 }
 
+func TestNewServerFromFactory(t *testing.T) {
+	logOutput := &syncio.Buffer{}
+	origOut := logrus.StandardLogger().Out
+	logrus.StandardLogger().SetOutput(logOutput)
+	logrus.StandardLogger().SetLevel(logrus.DebugLevel)
+	defer logrus.StandardLogger().SetOutput(origOut)
+
+	totalCallCount := 0
+	servletCallCount := 0
+
+	tb := &tomb.Tomb{}
+	sl := FuncServlet("/", func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(http.StatusOK)
+		_, err := res.Write([]byte("great success"))
+		assert.NoError(t, err)
+	})
+	sl = UseServlet(sl, func(handler http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			servletCallCount++
+			handler.ServeHTTP(w, r)
+		})
+	})
+
+	s := NewServerFromFactory(tb, sl, func(handler http.Handler) http.Server {
+		return http.Server{
+			Addr: "127.0.0.1:0",
+			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				totalCallCount++
+				handler.ServeHTTP(w, r)
+			}),
+		}
+	})
+	defer s.Tomb().Kill(nil)
+	safely.Run(s)
+
+	u := "http://" + s.Addr().String()
+	t.Logf("test server running on %s", u)
+
+	assert.Contains(t, logOutput.String(), "level=info msg=\"starting server\" bind=\"127.0.0.1:0\"")
+
+	// Works
+	res, err := http.Get(u)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+	body, err := ioutil.ReadAll(res.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, "great success", string(body))
+
+	assert.Equal(t, 1, totalCallCount)
+	assert.Equal(t, 1, servletCallCount)
+
+	// Do some requests.
+	_, err = http.Get(u)
+	assert.NoError(t, err)
+	_, err = http.Get(u)
+	assert.NoError(t, err)
+	assert.Equal(t, 3, totalCallCount)
+	assert.Equal(t, 3, servletCallCount)
+
+	// This request will only be handled by the server "total call count" middleware, not by the one specified for the servlet.
+	_, err = http.Get(u + "/foobarbaz")
+	assert.NoError(t, err)
+	assert.Equal(t, 4, totalCallCount)
+	assert.Equal(t, 3, servletCallCount)
+
+	assert.NotContains(t, logOutput.String(), fmt.Sprintf("level=debug msg=\"stopped server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
+
+	tb.Kill(errors.New("testing"))
+	<-tb.Dead()
+
+	assert.Contains(t, logOutput.String(), fmt.Sprintf("level=info msg=\"started server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
+	assert.Contains(t, logOutput.String(), fmt.Sprintf("level=debug msg=\"stopped server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
+
+	// No longer works
+	res, err = http.Get(u)
+	errMsg := fmt.Sprintf("Get %s: dial tcp %s: connect: connection refused", u, s.Addr().String())
+	assert.EqualError(t, err, errMsg)
+	assert.Nil(t, res)
+}
+
 func TestStoppableKeepaliveListener_Accept(t *testing.T) {
 	logOutput := &syncio.Buffer{}
 	origOut := logrus.StandardLogger().Out
