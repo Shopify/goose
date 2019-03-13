@@ -71,9 +71,10 @@ func TestRequestMetricsMiddleware(t *testing.T) {
 	assert.Equal(t, []string{"route:/hello/@name", "route_name:world", "statusClass:2xx", "statusCode:200", "success:true"}, recordedTags)
 
 	output := strings.ToLower(logging.String())
-	assert.Contains(t, output, "foo: bar\\r\\n")
-	assert.Contains(t, output, "foo: baz\\r\\n")
-	assert.NotContains(t, output, "authorization: secret\\r\\n")
-	assert.NotContains(t, output, "cookie: secret\\r\\n")
-	assert.NotContains(t, output, "set-cookie: secret\\r\\n")
+	assert.Contains(t, output, "foo:bar")
+	assert.Contains(t, output, "foo:baz")
+	assert.NotContains(t, output, "secret")
+	assert.Contains(t, output, "authorization:[filtered]")
+	assert.Contains(t, output, "cookie:[filtered]")
+	assert.Contains(t, output, "set-cookie:[filtered]")
 }
