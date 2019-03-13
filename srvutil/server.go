@@ -25,14 +25,22 @@ type Server interface {
 }
 
 func NewServer(t *tomb.Tomb, bind string, servlet Servlet) Server {
+	return NewServerFromFactory(t, servlet, func(handler http.Handler) http.Server {
+		return http.Server{
+			Addr:    bind,
+			Handler: handler,
+		}
+	})
+}
+
+type ServerFactory func(handler http.Handler) http.Server
+
+func NewServerFromFactory(t *tomb.Tomb, servlet Servlet, factory ServerFactory) Server {
 	router := mux.NewRouter()
 	servlet.RegisterRouting(router)
 
 	return &server{
-		Server: http.Server{
-			Addr:    bind,
-			Handler: router,
-		},
+		Server:   factory(router),
 		haveAddr: make(chan struct{}),
 		tomb:     t,
 	}
