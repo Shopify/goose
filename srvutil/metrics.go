@@ -3,7 +3,8 @@ package srvutil
 import (
 	"fmt"
 	"net/http"
-	"strings"
+
+	"github.com/Shopify/goose/redact"
 
 	"github.com/sirupsen/logrus"
 
@@ -50,16 +51,11 @@ func RequestMetricsMiddleware(next http.Handler) http.Handler {
 		ctx = statsd.WatchingTagLoggable(ctx, recorder)
 		r = r.WithContext(ctx)
 
-		headers := &strings.Builder{}
-		// Ignore headers that may contains sensitive information.
-		r.Header.WriteSubset(headers, map[string]bool{
-			"Authorization": true,
-			"Cookie":        true,
-		})
+		reqHeaders := redact.Headers(r.Header)
 
 		log(ctx, nil).
 			WithField("method", r.Method).
-			WithField("headers", headers).
+			WithField("headers", reqHeaders).
 			Info("http request")
 
 		metrics.HTTPRequest.Time(ctx, func() error {
@@ -67,13 +63,10 @@ func RequestMetricsMiddleware(next http.Handler) http.Handler {
 			return nil
 		})
 
-		headers = &strings.Builder{}
-		w.Header().WriteSubset(headers, map[string]bool{
-			"Set-Cookie": true,
-		})
+		resHeaders := redact.Headers(w.Header())
 
 		log(ctx, nil).
-			WithField("headers", headers).
+			WithField("headers", resHeaders).
 			Info("http response")
 	})
 }
