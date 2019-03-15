@@ -34,7 +34,8 @@
   revision = "bc664df9673713a0ccf26e3b55a673ec7301088b"
 
 [[projects]]
-  digest = "1:4a7b6a852e018acafd79bf345944a9b2a332ebb968593ff36edadd3677ebb019"
+  branch = "fix-go-112-test-failures"
+  digest = "1:e862d1405cc878d13e94de4e579e61f52af1510932b01e7be935cdc7dff81094"
   name = "github.com/bugsnag/bugsnag-go"
   packages = [
     ".",
@@ -44,8 +45,7 @@
     "sessions",
   ]
   pruneopts = ""
-  revision = "834d8fee64233ea79b0389ad7a5a438261788f66"
-  version = "v1.4.0"
+  revision = "57eeb790f058669b397c56c6615ffd46c902655c"
 
 [[projects]]
   digest = "1:dabac4ebc1a1ab0db927cc26be0bd5a5a31f846a8afee196b932056a345fee97"
