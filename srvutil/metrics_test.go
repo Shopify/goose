@@ -1,11 +1,14 @@
 package srvutil
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -71,10 +74,70 @@ func TestRequestMetricsMiddleware(t *testing.T) {
 	assert.Equal(t, []string{"route:/hello/@name", "route_name:world", "statusClass:2xx", "statusCode:200", "success:true"}, recordedTags)
 
 	output := strings.ToLower(logging.String())
+	assert.Contains(t, output, "statusclass=2xx")
+	assert.Contains(t, output, "statuscode=200")
 	assert.Contains(t, output, "foo:bar")
 	assert.Contains(t, output, "foo:baz")
 	assert.NotContains(t, output, "secret")
 	assert.Contains(t, output, "authorization:[filtered]")
 	assert.Contains(t, output, "cookie:[filtered]")
 	assert.Contains(t, output, "set-cookie:[filtered]")
+}
+
+type dummyHijackableResponseWriter struct {
+}
+
+func (dummyHijackableResponseWriter) Header() http.Header {
+	return http.Header{}
+}
+
+func (dummyHijackableResponseWriter) Write([]byte) (int, error) {
+	return 0, nil
+}
+
+func (dummyHijackableResponseWriter) WriteHeader(statusCode int) {
+
+}
+
+func (dummyHijackableResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	return nil, nil, nil
+}
+
+var _ http.ResponseWriter = &dummyHijackableResponseWriter{}
+var _ http.Hijacker = &dummyHijackableResponseWriter{}
+
+func TestNewHTTPRecorder(t *testing.T) {
+	t.Run("regular response writer", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		recorder := newHTTPRecorder(w)
+
+		assert.IsType(t, &httpRecorder{}, recorder)
+		_, ok := recorder.(http.ResponseWriter)
+		assert.True(t, ok, "recorder must implement http.ResponseWriter")
+		_, ok = recorder.(http.Hijacker)
+		assert.False(t, ok, "recorder must not implement http.Hijacker")
+
+		recorder.Header().Set("foo", "bar")
+		recorder.WriteHeader(http.StatusAccepted)
+		_, err := recorder.Write([]byte("the body"))
+		assert.NoError(t, err)
+
+		rawRecorder := recorder.(*httpRecorder)
+		assert.Equal(t, 202, w.Code)
+		assert.Equal(t, 202, rawRecorder.statusCode)
+		assert.Equal(t, "bar", w.Header().Get("foo"))
+		assert.Equal(t, "bar", rawRecorder.Header().Get("foo"))
+		assert.Equal(t, "the body", w.Body.String())
+	})
+
+	t.Run("hijackable response writer", func(t *testing.T) {
+		w := &dummyHijackableResponseWriter{}
+		recorder := newHTTPRecorder(w)
+
+		assert.IsType(t, &hijackableRecorder{}, recorder)
+		_, ok := recorder.(http.ResponseWriter)
+		assert.True(t, ok, "recorder must implement http.ResponseWriter")
+		_, ok = recorder.(http.Hijacker)
+		assert.True(t, ok, "recorder must implement http.Hijacker")
+	})
 }

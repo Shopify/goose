@@ -1,7 +1,9 @@
 package srvutil
 
 import (
+	"bufio"
 	"fmt"
+	"net"
 	"net/http"
 
 	"github.com/Shopify/goose/redact"
@@ -12,9 +14,19 @@ import (
 	"github.com/Shopify/goose/statsd"
 )
 
+type loggableHTTPRecorder interface {
+	http.ResponseWriter
+	LogFields() logrus.Fields
+}
+
 type httpRecorder struct {
 	http.ResponseWriter
 	statusCode int
+}
+
+type hijackableRecorder struct {
+	*httpRecorder
+	http.Hijacker
 }
 
 func (w *httpRecorder) WriteHeader(statusCode int) {
@@ -40,6 +52,19 @@ func (w *httpRecorder) LogFields() logrus.Fields {
 	return nil
 }
 
+// Hijack implements the http.Hijacker interface, to allow for e.g. WebSockets.
+func (w *hijackableRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	return w.Hijacker.Hijack()
+}
+
+func newHTTPRecorder(w http.ResponseWriter) loggableHTTPRecorder {
+	recorder := &httpRecorder{ResponseWriter: w}
+	if hijacker, ok := w.(http.Hijacker); ok {
+		return &hijackableRecorder{recorder, hijacker}
+	}
+	return recorder
+}
+
 // RequestMetricsMiddleware records the time taken to serve a request.
 // Example tags: statusClass:2xx, statusCode:200
 // Should be added as a middleware after RequestContextMiddleware to benefit from its tags
@@ -47,7 +72,7 @@ func RequestMetricsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		recorder := &httpRecorder{ResponseWriter: w}
+		recorder := newHTTPRecorder(w)
 		ctx = statsd.WatchingTagLoggable(ctx, recorder)
 		r = r.WithContext(ctx)
 
