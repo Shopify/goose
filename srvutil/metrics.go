@@ -24,11 +24,6 @@ type httpRecorder struct {
 	statusCode int
 }
 
-type hijackableRecorder struct {
-	*httpRecorder
-	http.Hijacker
-}
-
 func (w *httpRecorder) WriteHeader(statusCode int) {
 	w.statusCode = statusCode
 	w.ResponseWriter.WriteHeader(statusCode)
@@ -52,17 +47,21 @@ func (w *httpRecorder) LogFields() logrus.Fields {
 	return nil
 }
 
+type hijackableRecorder struct {
+	httpRecorder
+}
+
 // Hijack implements the http.Hijacker interface, to allow for e.g. WebSockets.
 func (w *hijackableRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
-	return w.Hijacker.Hijack()
+	return w.httpRecorder.ResponseWriter.(http.Hijacker).Hijack()
 }
 
 func newHTTPRecorder(w http.ResponseWriter) loggableHTTPRecorder {
-	recorder := &httpRecorder{ResponseWriter: w}
-	if hijacker, ok := w.(http.Hijacker); ok {
-		return &hijackableRecorder{recorder, hijacker}
+	recorder := httpRecorder{ResponseWriter: w}
+	if _, ok := w.(http.Hijacker); ok {
+		return &hijackableRecorder{recorder}
 	}
-	return recorder
+	return &recorder
 }
 
 // RequestMetricsMiddleware records the time taken to serve a request.
