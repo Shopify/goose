@@ -82,5 +82,10 @@ func (w *memcacheClientWrapper) Add(key string, item *Item) error {
 }
 
 func (w *memcacheClientWrapper) Delete(key string) error {
-	return w.client.Delete(key)
+	err := w.client.Delete(key)
+	if err == memcache.ErrCacheMiss {
+		// Deleting a missing entry is not an actual issue.
+		return nil
+	}
+	return err
 }
