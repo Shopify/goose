@@ -79,11 +79,11 @@ func (w *wrapper) Wait() (err error) {
 		log(w.ctx, nil).Info("command was canceled; attempting graceful termination")
 
 		atomic.AddUint32(&w.killedByCancel, 1)
-		err := w.Kill(syscall.SIGTERM)
+		err := w.killIgnoreDead(syscall.SIGTERM)
 		if err != nil {
 			log(w.ctx, err).Warn("unable to sigterm process; attempting killing")
 			atomic.AddUint32(&w.killedByCancel, 1)
-			if err := w.Kill(syscall.SIGKILL); err != nil {
+			if err := w.killIgnoreDead(syscall.SIGKILL); err != nil {
 				return errors.Wrap(err, "unable to kill process")
 			}
 
@@ -96,12 +96,22 @@ func (w *wrapper) Wait() (err error) {
 		case <-time.After(w.gracefulTerminationOnCancelTimeout):
 			log(w.ctx, nil).Warn("command was canceled and did not terminate in time; killing")
 			atomic.AddUint32(&w.killedByCancel, 1)
-			if err := w.Kill(syscall.SIGKILL); err != nil {
+			if err := w.killIgnoreDead(syscall.SIGKILL); err != nil {
 				return errors.Wrap(err, "unable to kill process")
 			}
 			return <-done
 		}
 	}
+}
+
+func (w *wrapper) killIgnoreDead(signal syscall.Signal) error {
+	err := w.Kill(signal)
+	// Only ignore this error in this method, the regular Kill() can be used for other purposes.
+	if err == syscall.ESRCH {
+		// Already dead
+		return nil
+	}
+	return err
 }
 
 func (w *wrapper) Kill(signal syscall.Signal) error {
