@@ -1,4 +1,3 @@
-// This file defines the static APIs which can be accessed directly from the bugsnag package
 package bugsnag
 
 import (
@@ -6,13 +5,15 @@ import (
 )
 
 var (
-	def = NewBugsnagger(&bugsnaggo.Config, bugsnaggo.Notify)
+	def = newBugsnagger(&bugsnaggo.Config, bugsnaggo.Notify)
 )
 
 // TabWriter defines the interface to be implemented by the different client objects that want custom decorated bugsnag tabs
 type TabWriter interface {
 	CreateBugsnagTab() Tab
 }
+
+// These define the static APIs which can be accessed directly from the bugsnag package
 
 func Notify(err error, rawData ...interface{}) {
 	def.Notify(err, rawData...)

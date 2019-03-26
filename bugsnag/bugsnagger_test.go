@@ -24,7 +24,7 @@ func init() {
 	}
 
 	mConfig := &bugsnaggo.Configuration{APIKey: "key"}
-	mSnagger = NewBugsnagger(mConfig, mNotifier)
+	mSnagger = newBugsnagger(mConfig, mNotifier)
 }
 
 func TestSetup(t *testing.T) {
@@ -153,7 +153,7 @@ type customTab struct {
 
 func (ct *customTab) CreateBugsnagTab() Tab {
 	return Tab{
-		Label: "test",
+		Label: "custom",
 		Rows:  Rows{"key": ct.val},
 	}
 }
@@ -161,7 +161,7 @@ func (ct *customTab) CreateBugsnagTab() Tab {
 func TestBuildDataTabWriter(t *testing.T) {
 	dataList, err := mSnagger.buildData(errors.New("err"), &customTab{"val"})
 	require.Equal(t, "err", err.Error())
-	require.Equal(t, Rows{"key": "val"}, newBugsnagData(dataList).getTab("test"))
+	require.Equal(t, Rows{"key": "val"}, newBugsnagData(dataList).getTab("custom"))
 }
 
 func TestBuildDataRegularData(t *testing.T) {
@@ -192,7 +192,7 @@ func TestAutoRecover(t *testing.T) {
 	}
 
 	errConfig := &bugsnaggo.Configuration{APIKey: "errAPI"}
-	snagger := NewBugsnagger(errConfig, notifier)
+	snagger := newBugsnagger(errConfig, notifier)
 
 	go func() {
 		defer snagger.AutoRecover()

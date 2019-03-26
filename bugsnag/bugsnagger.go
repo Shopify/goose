@@ -40,7 +40,7 @@ type bugsnagger struct {
 	notifier notifier
 }
 
-func NewBugsnagger(config *bugsnaggo.Configuration, notifier notifier) *bugsnagger {
+func newBugsnagger(config *bugsnaggo.Configuration, notifier notifier) *bugsnagger {
 	return &bugsnagger{config: config, notifier: notifier}
 }
 
@@ -139,16 +139,16 @@ func (snagger *bugsnagger) processLogEntry(entry *log.Entry) (string, string, ma
 }
 
 func (snagger *bugsnagger) extractUserID(fields log.Fields) string {
-	var userId string
+	var userID string
 	if s := fields["shopID"]; s != nil {
-		userId = fmt.Sprint(s)
+		userID = fmt.Sprint(s)
 	}
-	return userId
+	return userID
 }
 
-func (snagger *bugsnagger) updateUserID(user *bugsnaggo.User, userId string) {
-	if len(userId) > 0 {
-		user.Id = userId
+func (snagger *bugsnagger) updateUserID(user *bugsnaggo.User, userID string) {
+	if len(userID) > 0 {
+		user.Id = userID
 	}
 }
 
@@ -182,14 +182,15 @@ func (snagger *bugsnagger) AutoRecover(rawData ...interface{}) {
 	}
 }
 
-func recoverError(e interface{}) (err error) {
+func recoverError(e interface{}) error {
+	var err error
 	switch e := e.(type) {
 	case error:
 		err = e
 	default:
 		err = errors.Errorf("%v (%T)", e, e)
 	}
-	return
+	return err
 }
 
 //augment the bugnsag http middleware to add POST body to the request tab
@@ -242,7 +243,12 @@ func panicHandler() {
 		if err != nil {
 			log.Errorf("bugsnag.handleUncaughtPanic: %v", err)
 		}
-		state := bugsnaggo.HandledState{bugsnaggo.SeverityReasonUnhandledPanic, bugsnaggo.SeverityError, true, ""}
+		state := bugsnaggo.HandledState{
+			SeverityReason:   bugsnaggo.SeverityReasonUnhandledPanic,
+			OriginalSeverity: bugsnaggo.SeverityError,
+			Unhandled:        true,
+			Framework:        "",
+		}
 		Notify(toNotify, state, bugsnaggo.Configuration{Synchronous: true})
 	})
 	if err != nil {
