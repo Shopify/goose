@@ -3,6 +3,7 @@ package sharedstore
 import (
 	"bytes"
 	"encoding/gob"
+	"net"
 	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
@@ -53,7 +54,7 @@ func (w *memcacheClientWrapper) Get(key string) (*Item, error) {
 		if err == memcache.ErrCacheMiss {
 			err = nil
 		}
-		return nil, err
+		return nil, coalesceTimeoutError(err)
 	}
 
 	return decodeMemcacheItem(mItem)
@@ -64,7 +65,7 @@ func (w *memcacheClientWrapper) Set(key string, item *Item) error {
 	if err != nil {
 		return err
 	}
-	return w.client.Set(mItem)
+	return coalesceTimeoutError(w.client.Set(mItem))
 }
 
 func (w *memcacheClientWrapper) Add(key string, item *Item) error {
@@ -78,7 +79,7 @@ func (w *memcacheClientWrapper) Add(key string, item *Item) error {
 		// Abstract the memcache-specific error
 		return ErrNotStored
 	}
-	return err
+	return coalesceTimeoutError(err)
 }
 
 func (w *memcacheClientWrapper) Delete(key string) error {
@@ -87,5 +88,28 @@ func (w *memcacheClientWrapper) Delete(key string) error {
 		// Deleting a missing entry is not an actual issue.
 		return nil
 	}
-	return err
+	return coalesceTimeoutError(err)
+}
+
+type connectTimeoutError struct{}
+
+func (connectTimeoutError) Error() string   { return "memcache: connect timeout" }
+func (connectTimeoutError) Timeout() bool   { return true }
+func (connectTimeoutError) Temporary() bool { return true }
+
+func coalesceTimeoutError(err error) error {
+	// For some reason, gomemcache decided to replace the standard net.Error.
+	// Coalesce into a generic net.Error so that client don't have to deal with memcache-specific errors.
+	switch typed := err.(type) {
+	case *memcache.ConnectTimeoutError:
+		return &net.OpError{
+			Err:  &connectTimeoutError{},
+			Addr: typed.Addr,
+			Net:  typed.Addr.Network(),
+			Op:   "connect",
+		}
+	default:
+		// This also work if err is nil
+		return err
+	}
 }

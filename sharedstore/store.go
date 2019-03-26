@@ -2,6 +2,7 @@ package sharedstore
 
 import (
 	"context"
+	"net"
 	"time"
 
 	"github.com/pkg/errors"
@@ -59,7 +60,11 @@ func (s *store) Tomb() *tomb.Tomb {
 func (s *store) GetOrLock(ctx context.Context, key string) (Getter, Setter) {
 	item, err := s.getData(ctx, key)
 	if err != nil {
-		log(ctx, err).Error("unexpected client error")
+		if isTemporaryError(err) {
+			log(ctx, err).Warn("temporary client error")
+		} else {
+			log(ctx, err).Error("unexpected client error")
+		}
 	} else if item != nil {
 		return &resolvedGetter{
 			item: item,
@@ -84,7 +89,11 @@ func (s *store) GetOrLock(ctx context.Context, key string) (Getter, Setter) {
 	}
 
 	if ok, err := s.lock(ctx, key); err != nil {
-		log(ctx, err).Error("unable to lock item")
+		if isTemporaryError(err) {
+			log(ctx, err).Warn("temporarily unable to lock item")
+		} else {
+			log(ctx, err).Error("unable to lock item")
+		}
 		// We don't have the memcache lock, but we still have the local lock,
 		// which mitigates some of the concurrency.
 		// Proceed with the setter, to make sure threads get unlocked.
@@ -157,4 +166,11 @@ func (s *store) broadcast(ctx context.Context, key string) {
 	log(ctx, nil).WithField("key", key).Info("broadcasting to other item threads")
 
 	s.lockMap.Release(key)
+}
+
+func isTemporaryError(err error) bool {
+	if netErr, ok := err.(net.Error); ok {
+		return netErr.Temporary()
+	}
+	return false
 }
