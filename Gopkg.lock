@@ -219,7 +219,10 @@
 [[projects]]
   digest = "1:c587772fb8ad29ad4db67575dad25ba17a51f072ff18a22b4f0257a4d9c24f75"
   name = "github.com/stretchr/testify"
-  packages = ["assert"]
+  packages = [
+    "assert",
+    "require",
+  ]
   pruneopts = ""
   revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
   version = "v1.2.2"
@@ -239,6 +242,10 @@
   packages = [
     "context",
     "context/ctxhttp",
+    "http/httpguts",
+    "http2",
+    "http2/hpack",
+    "idna",
   ]
   pruneopts = ""
   revision = "c10e9556a7bc0e7c942242b606f0acf024ad5d6a"
@@ -268,6 +275,29 @@
   ]
   pruneopts = ""
   revision = "9b800f95dbbc54abff0acf7ee32d88ba4e328c89"
+
+[[projects]]
+  digest = "1:5acd3512b047305d49e8763eef7ba423901e85d5dd2fd1e71778a0ea8de10bd4"
+  name = "golang.org/x/text"
+  packages = [
+    "collate",
+    "collate/build",
+    "internal/colltab",
+    "internal/gen",
+    "internal/tag",
+    "internal/triegen",
+    "internal/ucd",
+    "language",
+    "secure/bidirule",
+    "transform",
+    "unicode/bidi",
+    "unicode/cldr",
+    "unicode/norm",
+    "unicode/rangetable",
+  ]
+  pruneopts = ""
+  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
+  version = "v0.3.0"
 
 [[projects]]
   digest = "1:bc09e719c4e2a15d17163f5272d9a3131c45d77542b7fdc53ff518815bc19ab3"
@@ -305,6 +335,7 @@
     "github.com/bradfitz/gomemcache/memcache",
     "github.com/bugsnag/bugsnag-go",
     "github.com/bugsnag/bugsnag-go/errors",
+    "github.com/bugsnag/panicwrap",
     "github.com/google/go-github/github",
     "github.com/google/pprof/driver",
     "github.com/gorilla/mux",
@@ -315,6 +346,8 @@
     "github.com/pkg/errors",
     "github.com/sirupsen/logrus",
     "github.com/stretchr/testify/assert",
+    "github.com/stretchr/testify/require",
+    "golang.org/x/net/http2",
     "golang.org/x/oauth2",
     "golang.org/x/oauth2/github",
     "golang.org/x/oauth2/google",
