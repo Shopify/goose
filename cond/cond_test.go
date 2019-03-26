@@ -389,11 +389,11 @@ func TestCond_Signal_random(t *testing.T) {
 
 	select {
 	case <-done:
-	case <-time.After(2 * time.Second):
+	case <-time.After(1 * time.Second):
 		t.Fatal("test timeout")
 	}
 
-	assert.InDelta(t, threads, successes, float64(threads/2), "roughly half the threads should succeed")
+	assert.InDelta(t, threads, successes, float64(3*threads/4), "roughly a quarter of the threads should succeed")
 }
 
 func TestCondSignalStealing(t *testing.T) {
