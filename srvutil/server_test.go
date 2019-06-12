@@ -20,15 +20,15 @@ import (
 
 func ExampleNewServer() {
 	tb := &tomb.Tomb{}
-	sl := FuncServlet("/hello/{name}", func(res http.ResponseWriter, req *http.Request) {
-		name := mux.Vars(req)["name"]
-		fmt.Fprintf(res, "hello %s", name)
+	sl := FuncServlet("/hello/{name}", func(w http.ResponseWriter, r *http.Request) {
+		name := mux.Vars(r)["name"]
+		fmt.Fprintf(w, "hello %s", name)
 	})
 
 	sl = UseServlet(sl,
 		// Should be first to properly add tags and logging fields to the context
 		RequestContextMiddleware,
-		RequestMetricsMiddleware,
+		RequestMetricsMiddleware(LogErrorBody),
 		safely.Middleware,
 	)
 

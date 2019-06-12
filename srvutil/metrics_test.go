@@ -48,7 +48,7 @@ func TestRequestMetricsMiddleware(t *testing.T) {
 		fmt.Fprintf(res, "hello %s", name)
 	})
 
-	sl = UseServlet(sl, RequestContextMiddleware, RequestMetricsMiddleware)
+	sl = UseServlet(sl, RequestContextMiddleware, RequestMetricsMiddleware(LogErrorBody))
 
 	s := NewServer(tb, "127.0.0.1:0", sl)
 	defer s.Tomb().Kill(nil)
@@ -109,7 +109,7 @@ var _ http.Hijacker = &dummyHijackableResponseWriter{}
 func TestNewHTTPRecorder(t *testing.T) {
 	t.Run("regular response writer", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		recorder := newHTTPRecorder(w)
+		recorder := newHTTPRecorder(w, nil)
 
 		assert.IsType(t, &httpRecorder{}, recorder)
 		_, ok := recorder.(http.ResponseWriter)
@@ -130,9 +130,44 @@ func TestNewHTTPRecorder(t *testing.T) {
 		assert.Equal(t, "the body", w.Body.String())
 	})
 
+	t.Run("body logger", func(t *testing.T) {
+		t.Run("log error body, save body when 4xx", func(t *testing.T) {
+			w := httptest.NewRecorder()
+			recorder := newHTTPRecorder(w, LogErrorBody)
+
+			recorder.WriteHeader(http.StatusBadRequest)
+			_, err := recorder.Write([]byte(`{"error": "bad"}`))
+			assert.NoError(t, err)
+
+			rawRecorder := recorder.(*httpRecorder)
+			assert.Equal(t, 400, w.Code)
+			assert.Equal(t, 400, rawRecorder.statusCode)
+			assert.Equal(t, `{"error": "bad"}`, w.Body.String())
+
+			assert.NotNil(t, recorder.ResponseBody())
+			assert.Equal(t, `{"error": "bad"}`, *recorder.ResponseBody())
+		})
+
+		t.Run("log error body, don't save body when 2xx", func(t *testing.T) {
+			w := httptest.NewRecorder()
+			recorder := newHTTPRecorder(w, LogErrorBody)
+
+			recorder.WriteHeader(http.StatusOK)
+			_, err := recorder.Write([]byte(`{"status": "ok"}`))
+			assert.NoError(t, err)
+
+			rawRecorder := recorder.(*httpRecorder)
+			assert.Equal(t, 200, w.Code)
+			assert.Equal(t, 200, rawRecorder.statusCode)
+			assert.Equal(t, `{"status": "ok"}`, w.Body.String())
+
+			assert.Nil(t, recorder.ResponseBody())
+		})
+	})
+
 	t.Run("hijackable response writer", func(t *testing.T) {
 		w := &dummyHijackableResponseWriter{}
-		recorder := newHTTPRecorder(w)
+		recorder := newHTTPRecorder(w, nil)
 
 		assert.IsType(t, &hijackableRecorder{}, recorder)
 		_, ok := recorder.(http.ResponseWriter)
