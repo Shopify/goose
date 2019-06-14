@@ -28,7 +28,7 @@ func ExampleNewServer() {
 	sl = UseServlet(sl,
 		// Should be first to properly add tags and logging fields to the context
 		RequestContextMiddleware,
-		RequestMetricsMiddleware(LogErrorBody),
+		NewRequestMetricsMiddleware(&RequestMetricsMiddlewareConfig{BodyLogPredicate: LogErrorBody}),
 		safely.Middleware,
 	)
 

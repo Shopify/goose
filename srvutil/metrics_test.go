@@ -48,7 +48,11 @@ func TestRequestMetricsMiddleware(t *testing.T) {
 		fmt.Fprintf(res, "hello %s", name)
 	})
 
-	sl = UseServlet(sl, RequestContextMiddleware, RequestMetricsMiddleware(LogErrorBody))
+	sl = UseServlet(
+		sl,
+		RequestContextMiddleware,
+		NewRequestMetricsMiddleware(&RequestMetricsMiddlewareConfig{BodyLogPredicate: LogErrorBody}),
+	)
 
 	s := NewServer(tb, "127.0.0.1:0", sl)
 	defer s.Tomb().Kill(nil)

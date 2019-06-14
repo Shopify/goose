@@ -88,15 +88,19 @@ func newHTTPRecorder(w http.ResponseWriter, bodyLogPredicate BodyLogPredicateFun
 	return &recorder
 }
 
-// RequestMetricsMiddleware records the time taken to serve a request, and logs request and response data.
+type RequestMetricsMiddlewareConfig struct {
+	BodyLogPredicate BodyLogPredicateFunc
+}
+
+// NewRequestMetricsMiddleware records the time taken to serve a request, and logs request and response data.
 // Example tags: statusClass:2xx, statusCode:200
 // Should be added as a middleware after RequestContextMiddleware to benefit from its tags
-func RequestMetricsMiddleware(bodyLogPredicate BodyLogPredicateFunc) func(http.Handler) http.Handler {
+func NewRequestMetricsMiddleware(c *RequestMetricsMiddlewareConfig) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 
-			recorder := newHTTPRecorder(w, bodyLogPredicate)
+			recorder := newHTTPRecorder(w, c.BodyLogPredicate)
 			ctx = statsd.WatchingTagLoggable(ctx, recorder)
 			r = r.WithContext(ctx)
 
@@ -125,5 +129,7 @@ func RequestMetricsMiddleware(bodyLogPredicate BodyLogPredicateFunc) func(http.H
 
 		})
 	}
-
 }
+
+// RequestMetricsMiddleware is here for backwards compatibility.
+var RequestMetricsMiddleware = NewRequestMetricsMiddleware(&RequestMetricsMiddlewareConfig{})
