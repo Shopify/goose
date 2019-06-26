@@ -5,9 +5,12 @@ package statsd
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Shopify/goose/logger"
+	"github.com/pkg/errors"
 )
 
 var log = logger.New("statsd")
@@ -41,6 +44,27 @@ var currentBackend = NewNullBackend()
 // SetBackend replaces the current backend with the given Backend.
 func SetBackend(b Backend) {
 	currentBackend = b
+}
+
+// ErrUnknownBackend is returned when the statsd backend implementation is not known.
+var ErrUnknownBackend = fmt.Errorf("unknown statsd backend type")
+
+// NewBackend returns the appropriate Backend for the given implementation and host.
+func NewBackend(impl, addr, prefix string, tags ...string) (Backend, error) {
+	var err error
+	var b Backend
+	switch strings.ToLower(impl) {
+	case "datadog":
+		b, err = NewDatadogBackend(addr, prefix, tags)
+	case "log":
+		b = NewLogBackend(prefix, tags)
+	case "null":
+		b = NewNullBackend()
+	default:
+		return nil, errors.WithStack(ErrUnknownBackend)
+	}
+
+	return b, errors.WithStack(err)
 }
 
 // Gauge measures the value of a metric at a particular time.
