@@ -2,6 +2,7 @@ package srvutil
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"net"
 	"net/http"
@@ -14,14 +15,24 @@ import (
 	"github.com/Shopify/goose/statsd"
 )
 
+type BodyLogPredicateFunc func(statusCode int) bool
+
+func LogErrorBody(statusCode int) bool {
+	return statusCode >= 400
+}
+
 type loggableHTTPRecorder interface {
 	http.ResponseWriter
 	LogFields() logrus.Fields
+	ResponseBody() *string
 }
 
 type httpRecorder struct {
 	http.ResponseWriter
 	statusCode int
+
+	bodyLogPredicate BodyLogPredicateFunc
+	body             bytes.Buffer
 }
 
 func (w *httpRecorder) WriteHeader(statusCode int) {
@@ -34,6 +45,11 @@ func (w *httpRecorder) Write(data []byte) (int, error) {
 	if w.statusCode == 0 {
 		w.statusCode = http.StatusOK
 	}
+
+	if w.bodyLogPredicate != nil && w.bodyLogPredicate(w.statusCode) {
+		w.body.Write(data)
+	}
+
 	return w.ResponseWriter.Write(data)
 }
 
@@ -47,6 +63,14 @@ func (w *httpRecorder) LogFields() logrus.Fields {
 	return nil
 }
 
+func (w *httpRecorder) ResponseBody() *string {
+	if w.body.Len() == 0 {
+		return nil
+	}
+	s := w.body.String()
+	return &s
+}
+
 type hijackableRecorder struct {
 	httpRecorder
 }
@@ -56,41 +80,56 @@ func (w *hijackableRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	return w.httpRecorder.ResponseWriter.(http.Hijacker).Hijack()
 }
 
-func newHTTPRecorder(w http.ResponseWriter) loggableHTTPRecorder {
-	recorder := httpRecorder{ResponseWriter: w}
+func newHTTPRecorder(w http.ResponseWriter, bodyLogPredicate BodyLogPredicateFunc) loggableHTTPRecorder {
+	recorder := httpRecorder{ResponseWriter: w, bodyLogPredicate: bodyLogPredicate}
 	if _, ok := w.(http.Hijacker); ok {
 		return &hijackableRecorder{recorder}
 	}
 	return &recorder
 }
 
-// RequestMetricsMiddleware records the time taken to serve a request.
+type RequestMetricsMiddlewareConfig struct {
+	BodyLogPredicate BodyLogPredicateFunc
+}
+
+// NewRequestMetricsMiddleware records the time taken to serve a request, and logs request and response data.
 // Example tags: statusClass:2xx, statusCode:200
 // Should be added as a middleware after RequestContextMiddleware to benefit from its tags
-func RequestMetricsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+func NewRequestMetricsMiddleware(c *RequestMetricsMiddlewareConfig) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
 
-		recorder := newHTTPRecorder(w)
-		ctx = statsd.WatchingTagLoggable(ctx, recorder)
-		r = r.WithContext(ctx)
+			recorder := newHTTPRecorder(w, c.BodyLogPredicate)
+			ctx = statsd.WatchingTagLoggable(ctx, recorder)
+			r = r.WithContext(ctx)
 
-		reqHeaders := redact.Headers(r.Header)
+			reqHeaders := redact.Headers(r.Header)
 
-		log(ctx, nil).
-			WithField("method", r.Method).
-			WithField("headers", reqHeaders).
-			Info("http request")
+			log(ctx).
+				WithField("method", r.Method).
+				WithField("headers", reqHeaders).
+				Info("http request")
 
-		metrics.HTTPRequest.Time(ctx, func() error {
-			next.ServeHTTP(recorder, r)
-			return nil
+			metrics.HTTPRequest.Time(ctx, func() error {
+				next.ServeHTTP(recorder, r)
+				return nil
+			})
+
+			resHeaders := redact.Headers(w.Header())
+
+			logger := log(ctx).
+				WithField("headers", resHeaders)
+
+			if body := recorder.ResponseBody(); body != nil {
+				logger = logger.WithField("responseBody", *body)
+			}
+
+			logger.Info("http response")
+
 		})
-
-		resHeaders := redact.Headers(w.Header())
-
-		log(ctx, nil).
-			WithField("headers", resHeaders).
-			Info("http response")
-	})
+	}
 }
+
+// RequestMetricsMiddleware is here for backwards compatibility.
+var RequestMetricsMiddleware = NewRequestMetricsMiddleware(&RequestMetricsMiddlewareConfig{})
