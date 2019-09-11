@@ -26,3 +26,12 @@ func (c *Counter) Decr(ctx context.Context, ts ...Tags) {
 	tags := loadTags(ctx, c.Tags, ts...)
 	Decr(ctx, c.Name, tags, c.Rate.Rate())
 }
+
+// SuccessCount is the same as calling Count but adds a `success` tag.
+// `success` tag is a boolean based on whether errp points to a nil pointer or not.
+func (c *Counter) SuccessCount(ctx context.Context, n int64, errp *error, ts ...Tags) {
+	if errp != nil {
+		ts = append(ts, Tags{"success": *errp == nil})
+	}
+	c.Count(ctx, n, ts...)
+}
