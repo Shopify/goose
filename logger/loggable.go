@@ -30,7 +30,7 @@ type keyValueContext struct {
 
 func (c *keyValueContext) Value(key interface{}) interface{} {
 	if key == logFieldsKey {
-		prev := getLoggableValues(c.Context)
+		prev := GetLoggableValues(c.Context)
 		prev[c.key] = c.value
 		return prev
 	}
@@ -44,7 +44,7 @@ type loggableContext struct {
 
 func (c *loggableContext) Value(key interface{}) interface{} {
 	if key == logFieldsKey {
-		prev := getLoggableValues(c.Context)
+		prev := GetLoggableValues(c.Context)
 		for k, v := range c.loggable.LogFields() {
 			prev[k] = v
 		}
@@ -82,14 +82,14 @@ func WatchingLoggable(ctx context.Context, l Loggable) context.Context {
 
 // GetLoggableValue returns the value of the metadata currently attached to the Context.
 func GetLoggableValue(ctx Valuer, key string) interface{} {
-	fields := getLoggableValues(ctx)
+	fields := GetLoggableValues(ctx)
 	if v, ok := fields[key]; ok {
 		return v
 	}
 	return nil
 }
 
-func getLoggableValues(ctx Valuer) logrus.Fields {
+func GetLoggableValues(ctx Valuer) logrus.Fields {
 	if ctx != nil {
 		fields, _ := ctx.Value(logFieldsKey).(logrus.Fields)
 		if fields != nil {
