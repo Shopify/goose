@@ -32,7 +32,7 @@ func ContextLog(ctx Valuer, err []error, entry *logrus.Entry) *logrus.Entry {
 	entry = entry.WithFields(GlobalFields)
 
 	if ctx != nil {
-		entry = entry.WithFields(getLoggableValues(ctx))
+		entry = entry.WithFields(GetLoggableValues(ctx))
 		if ctx, ok := ctx.(context.Context); ok {
 			entry = entry.WithContext(ctx)
 		}

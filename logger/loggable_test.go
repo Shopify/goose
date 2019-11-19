@@ -209,3 +209,20 @@ func checkData(ctx context.Context, t *testing.T, expected logrus.Fields) {
 	expected["component"] = "testing" // Will always be there
 	assert.Equal(t, expected, New("testing")(ctx, nil).Data)
 }
+
+func TestGetLoggableValue(t *testing.T) {
+	ctx := context.Background()
+	ctx = WithField(ctx, "foo", "bar")
+
+	value := GetLoggableValue(ctx, "foo")
+	assert.Equal(t, "bar", value)
+}
+
+func TestGetLoggableValues(t *testing.T) {
+	ctx := context.Background()
+	ctx = WithField(ctx, "foo", "bar")
+	ctx = WithField(ctx, "poipoi", true)
+
+	values := GetLoggableValues(ctx)
+	assert.Equal(t, logrus.Fields{"foo": "bar", "poipoi": true}, values)
+}
