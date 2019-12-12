@@ -18,6 +18,14 @@
   version = "2.1.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:28feaf8ccf56080d9a4a84f341d3b1f4628851ab0e77ee0255285fb4647b81b8"
+  name = "github.com/Shopify/go-cache"
+  packages = ["pkg"]
+  pruneopts = ""
+  revision = "cda8fa4cfdf27d9b6cadc7931e3f40941cd84947"
+
+[[projects]]
   digest = "1:512883404c2a99156e410e9880e3bb35ecccc0c07c1159eb204b5f3ef3c431b3"
   name = "github.com/bitly/go-simplejson"
   packages = ["."]
@@ -217,10 +225,19 @@
   version = "v1.4.0"
 
 [[projects]]
+  digest = "1:711eebe744c0151a9d09af2315f0bb729b2ec7637ef4c410fa90a18ef74b65b6"
+  name = "github.com/stretchr/objx"
+  packages = ["."]
+  pruneopts = ""
+  revision = "477a77ecc69700c7cdeb1fa9e129548e1c1c393c"
+  version = "v0.1.1"
+
+[[projects]]
   digest = "1:c587772fb8ad29ad4db67575dad25ba17a51f072ff18a22b4f0257a4d9c24f75"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
+    "mock",
     "require",
   ]
   pruneopts = ""
@@ -331,8 +348,8 @@
   analyzer-version = 1
   input-imports = [
     "github.com/DataDog/datadog-go/statsd",
+    "github.com/Shopify/go-cache/pkg",
     "github.com/bitly/go-simplejson",
-    "github.com/bradfitz/gomemcache/memcache",
     "github.com/bugsnag/bugsnag-go",
     "github.com/bugsnag/bugsnag-go/errors",
     "github.com/bugsnag/panicwrap",
@@ -346,6 +363,7 @@
     "github.com/pkg/errors",
     "github.com/sirupsen/logrus",
     "github.com/stretchr/testify/assert",
+    "github.com/stretchr/testify/mock",
     "github.com/stretchr/testify/require",
     "golang.org/x/net/http2",
     "golang.org/x/oauth2",

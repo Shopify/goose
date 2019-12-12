@@ -9,8 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Shopify/goose/logger"
 	"github.com/pkg/errors"
+
+	"github.com/Shopify/goose/logger"
 )
 
 var log = logger.New("statsd")
