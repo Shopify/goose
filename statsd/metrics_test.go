@@ -5,9 +5,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Shopify/goose/statsd/mocks"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	"github.com/Shopify/goose/statsd/mocks"
 )
 
 func TestWithRate(t *testing.T) {

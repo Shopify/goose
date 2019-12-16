@@ -5,21 +5,23 @@ import (
 	"net"
 	"time"
 
+	"github.com/Shopify/go-cache/pkg"
 	"github.com/pkg/errors"
 	"gopkg.in/tomb.v2"
 
 	"github.com/Shopify/goose/lockmap"
+	"github.com/Shopify/goose/logger"
 )
 
-var ErrNotStored = errors.New("not stored")
+var log = logger.New("sharedstore")
 
 // Store is able to retrieve data from a Client, or take a lock so the data can be set later
 type Store interface {
 	// GetOrLock returns a Getter, which is able to retrieve the data and/or a Setter,
 	// which can be invoked to set the data and release the locks.
 	GetOrLock(ctx context.Context, key string) (Getter, Setter)
-	getData(ctx context.Context, key string) (*Item, error)
-	setData(ctx context.Context, key string, data interface{}, ttl time.Duration) (*Item, error)
+	getData(ctx context.Context, key string) (*cache.Item, error)
+	setData(ctx context.Context, key string, data interface{}, ttl time.Duration) (*cache.Item, error)
 
 	isLocked(ctx context.Context, key string) (bool, error)
 	unlock(ctx context.Context, key string) error
@@ -31,7 +33,7 @@ type Store interface {
 	Tomb() *tomb.Tomb
 }
 
-func New(client Client, lockExpiry time.Duration) Store {
+func New(client cache.Client, lockExpiry time.Duration) Store {
 	return &store{
 		client:     client,
 		lockExpiry: lockExpiry,
@@ -40,7 +42,7 @@ func New(client Client, lockExpiry time.Duration) Store {
 }
 
 type store struct {
-	client     Client
+	client     cache.Client
 	lockExpiry time.Duration
 
 	// All threads waiting on the same key will subscribe to the condition
@@ -109,16 +111,16 @@ func (s *store) GetOrLock(ctx context.Context, key string) (Getter, Setter) {
 	return nil, setter
 }
 
-func (s *store) getData(ctx context.Context, key string) (*Item, error) {
+func (s *store) getData(ctx context.Context, key string) (*cache.Item, error) {
 	log(ctx, nil).WithField("key", key).Debug("retrieving item")
 
 	return s.client.Get(key)
 }
 
-func (s *store) setData(ctx context.Context, key string, data interface{}, ttl time.Duration) (*Item, error) {
+func (s *store) setData(ctx context.Context, key string, data interface{}, ttl time.Duration) (*cache.Item, error) {
 	log(ctx, nil).WithField("key", key).Debug("setting item")
 
-	item := Item{
+	item := cache.Item{
 		Data:       data,
 		Expiration: time.Now().Add(ttl),
 	}
@@ -133,14 +135,14 @@ func (s *store) setData(ctx context.Context, key string, data interface{}, ttl t
 func (s *store) lock(ctx context.Context, key string) (bool, error) {
 	log(ctx, nil).WithField("key", key).Debug("locking item")
 
-	err := s.client.Add(key+".lock", &Item{
+	err := s.client.Add(key+".lock", &cache.Item{
 		Expiration: time.Now().Add(s.lockExpiry),
 	})
 	if err == nil {
 		return true, nil
 	}
 
-	if err == ErrNotStored {
+	if err == cache.ErrNotStored {
 		log(ctx, err).Info("lock belongs to another instance")
 		err = nil
 	}

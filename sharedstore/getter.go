@@ -4,26 +4,28 @@ import (
 	"context"
 	"time"
 
+	"github.com/Shopify/go-cache/pkg"
+
 	"github.com/Shopify/goose/lockmap"
 )
 
 // Getter can wait for its internal condition to be ready,
 // such that it can return the desired data.
 type Getter interface {
-	Wait(ctx context.Context) (*Item, error)
+	Wait(ctx context.Context) (*cache.Item, error)
 	WouldWait(ctx context.Context) bool
 }
 
 // resolvedGetter is essentially a noop, the data is already available.
 type resolvedGetter struct {
-	item *Item
+	item *cache.Item
 }
 
 func (g *resolvedGetter) WouldWait(ctx context.Context) bool {
 	return false
 }
 
-func (g *resolvedGetter) Wait(ctx context.Context) (*Item, error) {
+func (g *resolvedGetter) Wait(ctx context.Context) (*cache.Item, error) {
 	return g.item, ctx.Err()
 }
 
@@ -46,7 +48,7 @@ func (g *promiseGetter) WouldWait(ctx context.Context) bool {
 	}
 }
 
-func (g *promiseGetter) Wait(ctx context.Context) (*Item, error) {
+func (g *promiseGetter) Wait(ctx context.Context) (*cache.Item, error) {
 	select {
 	case <-g.promise:
 		return g.store.getData(ctx, g.key)
@@ -74,7 +76,7 @@ func (g *pollGetter) WouldWait(ctx context.Context) bool {
 	}
 }
 
-func (g *pollGetter) Wait(ctx context.Context) (*Item, error) {
+func (g *pollGetter) Wait(ctx context.Context) (*cache.Item, error) {
 	ticker := time.NewTicker(pollingInterval)
 	defer ticker.Stop()
 

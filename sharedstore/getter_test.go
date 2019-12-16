@@ -5,15 +5,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Shopify/go-cache/pkg"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/Shopify/goose/logger"
 )
 
 func Test_promiseGetter(t *testing.T) {
-	client := memoryClient{}
-	ctx := logger.WithLoggable(context.Background(), &client)
-	store := New(&client, time.Second)
+	client := cache.NewMemoryClient()
+	ctx := context.Background()
+	store := New(client, time.Second)
 	store.Tomb().Go(store.Run)
 
 	sub, prov := store.GetOrLock(ctx, "foo")
@@ -26,7 +25,7 @@ func Test_promiseGetter(t *testing.T) {
 	assert.True(t, sub2.WouldWait(ctx))
 	assert.IsType(t, &setter{}, prov2, "should have a setter")
 
-	done := make(chan *Item)
+	done := make(chan *cache.Item)
 	go func() {
 		item, err := sub2.Wait(ctx)
 		assert.NoError(t, err)
@@ -47,10 +46,10 @@ func Test_promiseGetter(t *testing.T) {
 }
 
 func Test_pollGetter(t *testing.T) {
-	client := memoryClient{}
-	ctx := logger.WithLoggable(context.Background(), &client)
+	client := cache.NewMemoryClient()
+	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
-	store := New(&client, time.Second)
+	store := New(client, time.Second)
 	store.Tomb().Go(store.Run)
 
 	sub, prov := store.GetOrLock(ctx, "foo")
@@ -59,7 +58,7 @@ func Test_pollGetter(t *testing.T) {
 	assert.IsType(t, &setter{}, prov, "should have a setter")
 
 	// New store to mimic a new instance
-	store2 := New(&client, time.Second)
+	store2 := New(client, time.Second)
 	store2.Tomb().Go(store.Run)
 
 	sub2, prov2 := store2.GetOrLock(ctx, "foo")
@@ -67,7 +66,7 @@ func Test_pollGetter(t *testing.T) {
 	assert.True(t, sub2.WouldWait(ctx))
 	assert.IsType(t, &setter{}, prov2, "should have a setter")
 
-	done := make(chan *Item)
+	done := make(chan *cache.Item)
 	go func() {
 		item, err := sub2.Wait(ctx)
 		assert.NoError(t, err)
@@ -91,9 +90,9 @@ func Test_pollGetter(t *testing.T) {
 }
 
 func Test_promiseGetter_other_instance(t *testing.T) {
-	client := memoryClient{}
-	ctx := logger.WithLoggable(context.Background(), &client)
-	store := New(&client, time.Second)
+	client := cache.NewMemoryClient()
+	ctx := context.Background()
+	store := New(client, time.Second)
 	store.Tomb().Go(store.Run)
 
 	sub, prov := store.GetOrLock(ctx, "foo")
@@ -102,7 +101,7 @@ func Test_promiseGetter_other_instance(t *testing.T) {
 	assert.IsType(t, &setter{}, prov, "should have a setter")
 
 	// New store to mimic a new instance
-	store2 := New(&client, time.Second)
+	store2 := New(client, time.Second)
 	store2.Tomb().Go(store.Run)
 
 	sub2, prov2 := store2.GetOrLock(ctx, "foo")
@@ -118,7 +117,7 @@ func Test_promiseGetter_other_instance(t *testing.T) {
 		assert.NoError(t, err)
 	}()
 
-	done := make(chan *Item)
+	done := make(chan *cache.Item)
 	go func() {
 		item, err := sub3.Wait(ctx)
 		assert.NoError(t, err)
@@ -131,7 +130,7 @@ func Test_promiseGetter_other_instance(t *testing.T) {
 
 	select {
 	case item := <-done:
-		assert.IsType(t, &Item{}, item)
+		assert.IsType(t, &cache.Item{}, item)
 		assert.Equal(t, "bar", item.Data.(string))
 	case <-time.After(1 * time.Second):
 		assert.Fail(t, "took too long to complete")
