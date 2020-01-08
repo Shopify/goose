@@ -40,15 +40,15 @@ func NewServerFromFactory(t *tomb.Tomb, servlet Servlet, factory ServerFactory) 
 	servlet.RegisterRouting(router)
 
 	return &server{
-		Server:   factory(router),
+		server:   factory(router),
 		haveAddr: make(chan struct{}),
 		tomb:     t,
 	}
 }
 
 type server struct {
-	http.Server
-	tomb *tomb.Tomb
+	server http.Server
+	tomb   *tomb.Tomb
 
 	haveAddr chan struct{}
 	addr     *net.TCPAddr
@@ -64,11 +64,11 @@ func (c *server) Addr() *net.TCPAddr {
 }
 
 func (c *server) Run() error {
-	ctx := logger.WithField(context.Background(), "bind", c.Server.Addr)
+	ctx := logger.WithField(context.Background(), "bind", c.server.Addr)
 
 	log(ctx, nil).Info("starting server")
 
-	ln, err := net.Listen("tcp", c.Server.Addr)
+	ln, err := net.Listen("tcp", c.server.Addr)
 	if err != nil {
 		return err
 	}
@@ -86,19 +86,22 @@ func (c *server) Run() error {
 		tomb:        c.tomb,
 	}
 
+	shutdown := make(chan error)
 	go func() {
 		<-c.tomb.Dying()
 		log(ctx, c.tomb.Err()).Info("shutting down server")
 
 		// Call Shutdown to allow in-flight requests to gracefully complete.
 		ctx := context.Background()
-		err := c.Shutdown(ctx)
-		if err != nil {
-			log(ctx, err).Warn("error shutting down server")
-		}
+		shutdown <- c.server.Shutdown(ctx)
 	}()
 
-	return c.Serve(listener)
+	if err := c.server.Serve(listener); err != http.ErrServerClosed {
+		return err
+	}
+
+	log(ctx, nil).Debug("waiting for server to complete shutdown")
+	return <-shutdown
 }
 
 type stoppableKeepaliveListener struct {
