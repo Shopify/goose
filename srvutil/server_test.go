@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
@@ -186,6 +187,15 @@ func TestStoppableKeepaliveListener_Accept(t *testing.T) {
 
 		// Wait for the server to be ask to shutdown
 		<-tb.Dying()
+
+		// Allow time for the server to be trying to exit
+		time.Sleep(500 * time.Millisecond)
+
+		select {
+		case <-tb.Dead():
+			t.Fatal("should not be dead already")
+		default:
+		}
 
 		res.WriteHeader(http.StatusOK)
 		_, err := res.Write([]byte("great success"))
