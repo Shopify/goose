@@ -13,7 +13,7 @@ coverage.txt: $(GOFILES) Makefile
 show-coverage: coverage.txt
 	go tool cover -html=coverage.txt
 
-style: $(GOFILES) Makefile .gometalinter.json
+style: $(GOFILES) Makefile .golangci.yml
 	bin/style
 
 clean:

@@ -69,48 +69,47 @@ func NewBackend(impl, addr, prefix string, tags ...string) (Backend, error) {
 }
 
 // Gauge measures the value of a metric at a particular time.
-func Gauge(ctx context.Context, name string, value float64, tags []string, rate float64) error {
-	return warnIfError(ctx, currentBackend.Gauge(ctx, name, value, tags, rate))
+func Gauge(ctx context.Context, name string, value float64, tags []string, rate float64) {
+	warnIfError(ctx, currentBackend.Gauge(ctx, name, value, tags, rate))
 }
 
 // Count tracks how many times something happened per second.
-func Count(ctx context.Context, name string, value int64, tags []string, rate float64) error {
-	return warnIfError(ctx, currentBackend.Count(ctx, name, value, tags, rate))
+func Count(ctx context.Context, name string, value int64, tags []string, rate float64) {
+	warnIfError(ctx, currentBackend.Count(ctx, name, value, tags, rate))
 }
 
 // Histogram tracks the statistical distribution of a set of values on each host.
-func Histogram(ctx context.Context, name string, value float64, tags []string, rate float64) error {
-	return warnIfError(ctx, currentBackend.Histogram(ctx, name, value, tags, rate))
+func Histogram(ctx context.Context, name string, value float64, tags []string, rate float64) {
+	warnIfError(ctx, currentBackend.Histogram(ctx, name, value, tags, rate))
 }
 
 // Distribution tracks the statistical distribution of a set of values across your infrastructure.
-func Distribution(ctx context.Context, name string, value float64, tags []string, rate float64) error {
-	return warnIfError(ctx, currentBackend.Distribution(ctx, name, value, tags, rate))
+func Distribution(ctx context.Context, name string, value float64, tags []string, rate float64) {
+	warnIfError(ctx, currentBackend.Distribution(ctx, name, value, tags, rate))
 }
 
 // Decr is just Count of -1
-func Decr(ctx context.Context, name string, tags []string, rate float64) error {
-	return warnIfError(ctx, currentBackend.Decr(ctx, name, tags, rate))
+func Decr(ctx context.Context, name string, tags []string, rate float64) {
+	warnIfError(ctx, currentBackend.Decr(ctx, name, tags, rate))
 }
 
 // Incr is just Count of 1
-func Incr(ctx context.Context, name string, tags []string, rate float64) error {
-	return warnIfError(ctx, currentBackend.Incr(ctx, name, tags, rate))
+func Incr(ctx context.Context, name string, tags []string, rate float64) {
+	warnIfError(ctx, currentBackend.Incr(ctx, name, tags, rate))
 }
 
 // Set counts the number of unique elements in a group.
-func Set(ctx context.Context, name string, value string, tags []string, rate float64) error {
-	return warnIfError(ctx, currentBackend.Set(ctx, name, value, tags, rate))
+func Set(ctx context.Context, name string, value string, tags []string, rate float64) {
+	warnIfError(ctx, currentBackend.Set(ctx, name, value, tags, rate))
 }
 
 // Timing sends timing information, it is an alias for TimeInMilliseconds
-func Timing(ctx context.Context, name string, value time.Duration, tags []string, rate float64) error {
-	return warnIfError(ctx, currentBackend.Timing(ctx, name, value, tags, rate))
+func Timing(ctx context.Context, name string, value time.Duration, tags []string, rate float64) {
+	warnIfError(ctx, currentBackend.Timing(ctx, name, value, tags, rate))
 }
 
-func warnIfError(ctx context.Context, err error) error {
+func warnIfError(ctx context.Context, err error) {
 	if err != nil {
 		log(ctx, err).WithField("error", err).Warn("couldn't submit event to statsd")
 	}
-	return err
 }

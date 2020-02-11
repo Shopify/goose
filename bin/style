@@ -2,115 +2,58 @@
 
 require 'fileutils'
 require 'open3'
+require 'open-uri'
 
 class Style
   class << self
+    INSTALLER_URL = 'https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh'
+    EXECUTABLE = 'golangci-lint'
+    VERSION = '1.23.6'
+    VERSION_TAG = "v#{VERSION}"
+
     def call
-      abort "#$0 must be run from root of Go project" unless File.exist?('Gopkg.toml') 
-
-      srcdirs = %x{go list -f '{{.Dir}}' ./...}.split
-
-      if ARGV.first == "--fix"
-        gopath = ENV['GOPATH'] or abort 'GOPATH not set'
-        autofix(srcdirs, gopath)
-      else
-        run_full_lint(srcdirs, ARGV)
-      end
+      install unless up_to_date?
+      run(*ARGV)
     end
 
     private
 
-    def autofix(srcdirs, gopath)
-      gofiles = srcdirs.
-        flat_map { |d| Dir.glob("#{d}/**/*.go") }.
-        reject   { |f| f.end_with?('_mock.go') }.
-        reject   { |f| f.end_with?('.pb.go') }
-
-      abort "couldn't find any lintable files" if gofiles.empty?
-
-      msg = "Linting #{gofiles.size} files in #{srcdirs.join(', ')}"
-
-      extra_args = []
-
-      gopath_src = File.join(gopath, 'src')
-      if Dir.pwd.start_with?(gopath_src)
-        extra_args = ['-local', Dir.pwd.sub(gopath_src+'/', '')]
-        msg += " with #{extra_args.join(' ')}"
-      end
-
-      puts(msg)
-
-      must_spawnwait('goimports', '-w', *extra_args, *gofiles)
-      exec('gofmt', '-w', '-s', *gofiles)
+    def install_path
+      File.join(ENV.fetch('GOPATH', ENV.fetch('HOME')), 'bin')
     end
 
-    Paths = Struct.new(:json, :annotations, :checkstyle, :junit)
+    def bin_path
+      File.join(install_path, EXECUTABLE)
+    end
 
-    def run_full_lint(srcdirs, argv)
-      puts "Installing gometalinter..."
-      must_spawnwait('gometalinter', '--install', out: '/dev/null')
-      puts "Running gometalinter..."
+    def exist?
+      File.executable?(bin_path)
+    end
 
-      packages = srcdirs.map { |d| "#{d}/..." }
+    def up_to_date?
+      return false unless exist?
+      out, stat = Open3.capture2(bin_path, '--version')
+      raise("Unable to check version of #{bin_path}") unless stat.success?
+      out.match(/\b#{VERSION}\b/)
+    end
 
-      config = ENV.fetch('GOMETALINTER_CONFIG', '.gometalinter.json')
+    def install
+      puts "Installing #{EXECUTABLE}..."
 
-      paths = Paths.new(*ENV.values_at(
-        'JSON_PATH', 'ANNOTATIONS_PATH', 'CHECKSTYLE_PATH', 'JUNIT_PATH'
-      ))
+      open(INSTALLER_URL) do |installer|
+        Open3.popen2('sh', '-s', '--', '-b', install_path, VERSION_TAG) do |stdin, out, stat|
+          IO.copy_stream(installer, stdin)
+          stdin.close
+          print out.read
 
-      # no extra post-processing requested: don't write JSON or anything, just
-      # run gometalinter.
-      unless paths.json || paths.annotations || paths.checkstyle || paths.junit
-        exec('gometalinter', '--config', config, '-t', *argv, *packages)
-      end
-
-      # ...extra stuff requested. run with json output.
-      json, status = Open3.capture2(
-        'gometalinter', '--config', config, '-t', '--json', *argv, *packages,
-      )
-
-      if paths.json
-        File.write(paths.json, json)
-      end
-
-      if paths.annotations
-        loadscript('gometalinter2annotations')
-        annot = GoMetaLinterToAnnotations.translate(json)
-        File.write(paths.annotations, annot)
-      end
-
-      if paths.checkstyle || paths.junit
-        loadscript('gometalinter2checkstyle')
-        checkstyle = GoMetaLinterToCheckstyle.translate(json)
-
-        if paths.checkstyle
-          File.write(paths.checkstyle, checkstyle)
-        end
-
-        if paths.junit
-          loadscript('checkstyle2junit')
-          junit = CheckstyleToJUnit.translate(checkstyle)
-          File.write(paths.junit, junit)
+          raise("failed to install #{EXECUTABLE} #{VERSION_TAG}") unless stat.value.success?
         end
       end
-
-      exit(status.exitstatus)
     end
 
-    def loadscript(script)
-      load(File.expand_path("./#{script}", __dir__))
-    end
-
-    def spawnwait(*args, **kwargs)
-      _, stat = Process.waitpid2(Process.spawn(*args, **kwargs))
-      stat
-    end
-
-    def must_spawnwait(*args, **kwargs)
-      stat = spawnwait(*args, **kwargs)
-      abort("#{args.first} failed") unless stat.success?
-      stat
+    def run(*argv)
+      config = ENV.fetch('GOLANGCI_CONFIG', '.golangci.yml')
+      exec(bin_path, 'run', '--config', config, *argv)
     end
   end
 end

@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+const placeholderText = "[FILTERED]"
+
 var GlobalSensitiveSubstrings = []string{
 	"authorization",
 	"cookie",
@@ -35,7 +37,7 @@ func Map(data map[string]interface{}) map[string]interface{} {
 
 	for key, value := range data {
 		if IsSensitive(key) {
-			redactedData[key] = "[FILTERED]"
+			redactedData[key] = placeholderText
 		} else {
 			redactedData[key] = value
 		}
@@ -49,7 +51,7 @@ func Headers(headers http.Header) map[string]string {
 
 	for key, value := range headers {
 		if IsSensitive(key) {
-			redactedData[key] = "[FILTERED]"
+			redactedData[key] = placeholderText
 		} else {
 			redactedData[key] = strings.Join(value, ",")
 		}

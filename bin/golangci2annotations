@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+
+require 'json'
+
+# https://shopify-build.docs.shopify.io/jobs/github_checks
+
+module GoLangCIToAnnotations
+  class << self
+    def call
+      raise "Usage: #$0 < golangci-lint-output.json" unless STDIN.fcntl(Fcntl::F_GETFL, 0) == 0
+      puts translate(ARGF.read)
+    end
+
+    def translate(input)
+      data = JSON.parse(input)
+
+      out = (data["Issues"] || []).map do |msg|
+        extra = {}
+        col = msg['Pos']['Column']
+        if col && col > 0
+          extra = { start_column: col }
+        end
+
+        {
+          path:             msg["Pos"]["Filename"],
+          start_line:       msg['Pos']['Line'],
+          annotation_level: "warning",
+          message:          msg['Text'],
+          title:            msg['FromLinter'],
+          **extra
+        }
+      end
+      JSON.pretty_generate(out)
+    end
+  end
+end
+
+__FILE__ == $PROGRAM_NAME and GoMetaLinterToAnnotations.call

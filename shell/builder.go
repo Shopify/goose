@@ -42,10 +42,8 @@ func (w *wrapper) WithEnv(env Env) Builder {
 func (w *wrapper) WithSysProcAttr(attr *syscall.SysProcAttr) Builder {
 	if w.sysProcAttr == nil {
 		w.sysProcAttr = attr
-	} else {
-		if err := mergo.Merge(w.sysProcAttr, *attr); err != nil {
-			panic(errors.Wrap(err, "unable to merge SysProcAttr"))
-		}
+	} else if err := mergo.Merge(w.sysProcAttr, *attr); err != nil {
+		panic(errors.Wrap(err, "unable to merge SysProcAttr"))
 	}
 	return w
 }
@@ -59,7 +57,7 @@ func (w *wrapper) WithContextCancellation(gracefulTimeout time.Duration) Builder
 func (w *wrapper) Prepare() Supervisor {
 	log(w.ctx, nil).Debug("preparing shell command")
 
-	cmd := exec.Command(w.path, w.args...)
+	cmd := exec.Command(w.path, w.args...) //nolint:gosec
 	cmd.SysProcAttr = w.sysProcAttr
 
 	// Avoid modifying the w.env, so it doesn't log the sensitive OS environment

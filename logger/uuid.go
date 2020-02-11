@@ -3,7 +3,7 @@ package logger
 import (
 	"context"
 
-	"github.com/nu7hatch/gouuid"
+	uuid "github.com/nu7hatch/gouuid"
 )
 
 const UUIDKey = "uuid"

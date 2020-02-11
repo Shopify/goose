@@ -69,21 +69,21 @@ func (m Metric) WithTags(tags ...string) Metric {
 }
 
 // Count increments a counter based on the metric's name, tags, and rate by the supplied value.
-func (m Metric) Count(value int64) error {
-	return Count(context.Background(), m.name, value, m.tags, m.rate)
+func (m Metric) Count(value int64) {
+	Count(context.Background(), m.name, value, m.tags, m.rate)
 }
 
 // Incr increments a counter based on the metric's name, tags, and rate by 1.
-func (m Metric) Incr() error {
-	return Incr(context.Background(), m.name, m.tags, m.rate)
+func (m Metric) Incr() {
+	Incr(context.Background(), m.name, m.tags, m.rate)
 }
 
 // Decr decrements a counter based on the metric's name, tags, and rate by 1.
-func (m Metric) Decr() error {
-	return Decr(context.Background(), m.name, m.tags, m.rate)
+func (m Metric) Decr() {
+	Decr(context.Background(), m.name, m.tags, m.rate)
 }
 
 // Distribution tracks the distribution of a set of values based on the metric's name, tags, and rate.
-func (m Metric) Distribution(value float64) error {
-	return Distribution(context.Background(), m.name, value, m.tags, m.rate)
+func (m Metric) Distribution(value float64) {
+	Distribution(context.Background(), m.name, value, m.tags, m.rate)
 }

@@ -39,24 +39,25 @@ func NewBuilder(ctx context.Context, path string, args ...string) Builder {
 }
 
 type wrapper struct {
-	ctx context.Context
-	cmd *exec.Cmd
-
-	path        string
-	dir         string
 	args        []string
 	env         []string
-	osEnv       bool
+	ctx         context.Context
+	path        string
+	dir         string
+	cmd         *exec.Cmd
 	sysProcAttr *syscall.SysProcAttr
-
-	ctxCancellation bool
-	killedByCancel  uint32 // Number of times the command was "killed" after the context was canceled.
 
 	// When a context is provided and it is canceled while the process is
 	// running, we send SIGTERM to the process. if, after this period, the
 	// process is still running, we send SIGKILL. If left unspecified, the
 	// default is 3 seconds.
 	gracefulTerminationOnCancelTimeout time.Duration
+
+	// Number of times the command was "killed" after the context was canceled.
+	killedByCancel uint32
+
+	osEnv           bool
+	ctxCancellation bool
 }
 
 func (w *wrapper) StatsTags() statsd.Tags {
