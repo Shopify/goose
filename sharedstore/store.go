@@ -5,7 +5,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/Shopify/go-cache/pkg"
+	cache "github.com/Shopify/go-cache/pkg"
 	"github.com/pkg/errors"
 	"gopkg.in/tomb.v2"
 

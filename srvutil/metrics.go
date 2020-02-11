@@ -111,7 +111,7 @@ func NewRequestMetricsMiddleware(c *RequestMetricsMiddlewareConfig) func(http.Ha
 				WithField("headers", reqHeaders).
 				Info("http request")
 
-			metrics.HTTPRequest.Time(ctx, func() error {
+			_ = metrics.HTTPRequest.Time(ctx, func() error {
 				next.ServeHTTP(recorder, r)
 				return nil
 			})

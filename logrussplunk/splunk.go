@@ -159,6 +159,9 @@ func (hook *Hook) submitToSplunk(body *closingByteBuffer) error {
 	if err != nil {
 		return err
 	}
+	if err := resp.Body.Close(); err != nil {
+		return err
+	}
 
 	if resp.StatusCode != http.StatusOK {
 		return ErrSplunkSendFailed{err: errors.New(resp.Status)}

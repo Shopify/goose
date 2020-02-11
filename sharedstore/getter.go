@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/Shopify/go-cache/pkg"
+	cache "github.com/Shopify/go-cache/pkg"
 
 	"github.com/Shopify/goose/lockmap"
 )

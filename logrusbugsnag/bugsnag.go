@@ -115,13 +115,14 @@ func findLogrusExit() int {
 	foundLogrus := false
 	for i := 0; ; i++ {
 		frame, more := frames.Next()
-		if strings.Contains(frame.File, logrusPackage) {
+		switch {
+		case strings.Contains(frame.File, logrusPackage):
 			if !foundLogrus {
 				foundLogrus = true
 			}
-		} else if foundLogrus {
+		case foundLogrus:
 			return i
-		} else if !more {
+		case !more:
 			// Exhausted the stack, take deepest.
 			return i
 		}
@@ -131,7 +132,7 @@ func findLogrusExit() int {
 func findPanic() int {
 	stack := make([]uintptr, 50)
 	// skip two frames: runtime.Callers + findPanic
-	nCallers := runtime.Callers(2, stack[:])
+	nCallers := runtime.Callers(2, stack)
 	frames := runtime.CallersFrames(stack[:nCallers])
 	for i := 0; ; i++ {
 		frame, more := frames.Next()

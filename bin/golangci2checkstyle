@@ -1,0 +1,77 @@
+#!/usr/bin/env ruby
+
+# Input:
+# {
+#   "Issues": [
+#     {
+#       "FromLinter": "gofmt",
+#       "Text": "File is not `gofmt`-ed with `-s`",
+#       "Pos": {
+#         "Filename": "shell/shell.go",
+#         "Offset": 0,
+#         "Line": 9,
+#         "Column": 0
+#       },
+#       "SourceLines": [
+#         "\t\"github.com/sirupsen/logrus\""
+#       ],
+#       "Replacement": {
+#         "NeedOnlyDelete": true,
+#         "NewLines": null
+#       }
+#     }
+#   ]
+# }
+#
+# Output:
+# <?xml version="1.0" encoding="UTF-8"?>
+# <checkstyle version="5.0">
+#     <file name="shell/shell.go">
+#         <error column="0" line="9" message='File is not `gofmt`-ed with `-s`' severity="warning" source="gofmt">
+#         </error>
+#     </file>
+# </checkstyle>
+
+require 'fcntl'
+require 'json'
+require "rexml/document"
+
+module GoLangCIToCheckstyle
+  class << self
+    def call
+      raise "Usage: #$0 < golangci-lint-output.json" unless STDIN.fcntl(Fcntl::F_GETFL, 0) == 0
+      puts translate(ARGF.read)
+    end
+
+    def translate(input)
+      json = JSON.parse(input)
+
+      xml = REXML::Document.new
+      root = xml.add_element('checkstyle', 'version' => 5.0)
+
+      files = Hash.new { |h, k| h[k] = [] }
+      (json["Issues"] || []).each do |line|
+        files[line["Pos"]["Filename"]] << line
+      end
+
+      files.each do |file, lines|
+        file_el = root.add_element('file', 'name' => file)
+        lines.each do |line|
+          file_el.add_element('error',
+            'line' => line['Pos']['Line'],
+            'column' => line['Pos']['Column'],
+            'message' => line['Text'],
+            'severity' => 'warning',
+            'source' => line['FromLinter'],
+          )
+        end
+      end
+
+      io = StringIO.new
+      xml.write(REXML::Output.new(io, "UTF-8"))
+      io.string
+    end
+  end
+end
+
+__FILE__ == $PROGRAM_NAME and GoMetaLinterToCheckstyle.call
