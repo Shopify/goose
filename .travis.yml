@@ -1,24 +1,13 @@
 language: go
-matrix:
-  include:
-    - name: "1.10.x unit tests"
-      go: "1.10.x"
-      env: TARGET=test
-    - name: "1.11.x unit tests"
-      go: "1.11.x"
-      env: TARGET=coverage
-    - name: "Linting"
-      go: "1.11.x"
-      env: TARGET=style
-before_install:
-  # Use authentication for higher limits with go.googlesource.com
-  # https://github.com/golang/go/issues/12933#issuecomment-199429151
-  - openssl aes-256-cbc -K $encrypted_36455a09984d_key -iv $encrypted_36455a09984d_iv -in .gitcookies.sh.enc -out .gitcookies.sh -d
-install:
-  - bash .gitcookies.sh
-  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-  - dep ensure
+
+go:
+  - "1.13"
+  - tip
+
+go_import_path: github.com/Shopify/goose
+
 script:
-  - make $TARGET
+  - make style coverage
+
 after_success:
   - if [[ -f "coverage.txt" ]]; then bash <(curl -s https://codecov.io/bash); fi

@@ -105,7 +105,7 @@ func (hook *Hook) Fire(entry *logrus.Entry) error {
 }
 
 const goPanic = "runtime.gopanic"
-const logrusPackage = "github.com/sirupsen/logrus/"
+const logrusPackage = "github.com/sirupsen/logrus."
 
 func findLogrusExit() int {
 	stack := make([]uintptr, 12)
@@ -116,7 +116,7 @@ func findLogrusExit() int {
 	for i := 0; ; i++ {
 		frame, more := frames.Next()
 		switch {
-		case strings.Contains(frame.File, logrusPackage):
+		case strings.Contains(frame.Function, logrusPackage):
 			if !foundLogrus {
 				foundLogrus = true
 			}
