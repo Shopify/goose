@@ -33,13 +33,9 @@ func (t *Timer) Time(ctx context.Context, fn func() error, ts ...Tags) error {
 	return err
 }
 
-type SuccessFinisher interface {
-	SuccessFinish(err *error)
-}
-
 type Finisher interface {
-	SuccessFinisher
 	Finish()
+	SuccessFinish(err *error)
 }
 
 type timerFinisher struct {
@@ -65,10 +61,15 @@ func (t *timerFinisher) SuccessFinish(errp *error) {
 // StartTimer provides a way to collect a duration metric for a function call
 // in one line.
 //
-// Example:
+// Examples:
 //
 //     func foo()  {
 //       defer t.StartTimer().Finish()
+//       // ...
+//     }
+//
+//     func foo() (err error)  {
+//       defer t.StartTimer().SuccessFinish(&err)
 //       // ...
 //     }
 func (t *Timer) StartTimer(ctx context.Context, ts ...Tags) Finisher {
@@ -78,69 +79,4 @@ func (t *Timer) StartTimer(ctx context.Context, ts ...Tags) Finisher {
 		tags:      ts,
 		ctx:       ctx,
 	}
-}
-
-type successTimerSetFinisher struct {
-	set       *SuccessTimerSet
-	startTime time.Time
-	tags      []Tags
-	ctx       context.Context
-}
-
-func (s *successTimerSetFinisher) SuccessFinish(errp *error) {
-	tags := append([]Tags{s.set.Tags}, s.tags...)
-	// Caller should always pass a pointer to an error, but don't crash if it doesn't
-	if errp != nil {
-		success := *errp == nil
-		if success {
-			s.set.Success.Incr(s.ctx, tags...)
-		} else {
-			s.set.Failure.Incr(s.ctx, tags...)
-		}
-		tags = append(tags, Tags{"success": success})
-	}
-	s.set.Duration.Duration(s.ctx, time.Since(s.startTime), tags...)
-}
-
-// StartTimer provides a way to collect duration and success metrics for a
-// function call in one line.
-//
-// Example:
-//
-//     func foo() (err error) {
-//       defer sts.StartTimer().Finish(&err)
-//       err = bar()
-//       return
-//     }
-func (s *SuccessTimerSet) StartTimer(ctx context.Context, ts ...Tags) SuccessFinisher {
-	return &successTimerSetFinisher{
-		set:       s,
-		startTime: time.Now(),
-		tags:      ts,
-		ctx:       ctx,
-	}
-}
-
-// SuccessTimerSet is a convenience wrapper around paired "success" and
-// "failure" metrics for an operation, as well as a "duration" metric
-// indicating how long it took to run the operation.
-type SuccessTimerSet struct {
-	Success  *Counter
-	Failure  *Counter
-	Duration *Timer
-	Tags     Tags
-}
-
-// Instrument executes the provided function, timing its execution.
-// It collects the Duration metric with the elapsed time, and increments either
-// the success of failure metric depending on whether an error was returned
-// from the function.
-func (s *SuccessTimerSet) Instrument(ctx context.Context, fn func() error, ts ...Tags) error {
-	err := s.Duration.Time(ctx, fn, ts...)
-	if err == nil {
-		s.Success.Incr(ctx, ts...)
-	} else {
-		s.Failure.Incr(ctx, ts...)
-	}
-	return err
 }
