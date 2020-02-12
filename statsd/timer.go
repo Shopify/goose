@@ -15,7 +15,7 @@ type Timer Collector
 //
 // The last parameter is an arbitrary array of tags as maps.
 func (t *Timer) Duration(ctx context.Context, n time.Duration, ts ...Tags) {
-	tags := loadTags(ctx, t.Tags, ts...)
+	tags := getStatsTags(ctx, ts...)
 	Distribution(ctx, t.Name, n.Seconds()*1000, tags, t.Rate.Rate())
 }
 
@@ -46,12 +46,11 @@ type timerFinisher struct {
 }
 
 func (t *timerFinisher) Finish() {
-	tags := append([]Tags{t.timer.Tags}, t.tags...)
-	t.timer.Duration(t.ctx, time.Since(t.startTime), tags...)
+	t.timer.Duration(t.ctx, time.Since(t.startTime), t.tags...)
 }
 
 func (t *timerFinisher) SuccessFinish(errp *error) {
-	tags := append([]Tags{t.timer.Tags}, t.tags...)
+	tags := append([]Tags{}, t.tags...) // Copy the slice
 	if errp != nil {
 		tags = append(tags, Tags{"success": *errp == nil})
 	}

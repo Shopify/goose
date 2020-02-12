@@ -10,6 +10,6 @@ type Gaugor Collector
 //
 // The last parameter is an arbitrary array of tags as maps.
 func (g *Gaugor) Gauge(ctx context.Context, n float64, ts ...Tags) {
-	tags := loadTags(ctx, g.Tags, ts...)
+	tags := getStatsTags(ctx, ts...)
 	Gauge(ctx, g.Name, n, tags, g.Rate.Rate())
 }

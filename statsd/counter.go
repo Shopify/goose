@@ -11,19 +11,19 @@ type Counter Collector
 //
 // The last parameter is an arbitrary array of tags as maps.
 func (c *Counter) Count(ctx context.Context, n int64, ts ...Tags) {
-	tags := loadTags(ctx, c.Tags, ts...)
+	tags := getStatsTags(ctx, ts...)
 	Count(ctx, c.Name, n, tags, c.Rate.Rate())
 }
 
 // Incr is basically the same as Count(1)
 func (c *Counter) Incr(ctx context.Context, ts ...Tags) {
-	tags := loadTags(ctx, c.Tags, ts...)
+	tags := getStatsTags(ctx, ts...)
 	Incr(ctx, c.Name, tags, c.Rate.Rate())
 }
 
 // Decr is basically the same as Count(-1)
 func (c *Counter) Decr(ctx context.Context, ts ...Tags) {
-	tags := loadTags(ctx, c.Tags, ts...)
+	tags := getStatsTags(ctx, ts...)
 	Decr(ctx, c.Name, tags, c.Rate.Rate())
 }
 
