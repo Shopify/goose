@@ -11,5 +11,5 @@ type Gaugor collector
 // The last parameter is an arbitrary array of tags as maps.
 func (g *Gaugor) Gauge(ctx context.Context, n float64, ts ...Tags) {
 	tags := getStatsTags(ctx, ts...)
-	Gauge(ctx, g.Name, n, tags, g.Rate.Rate())
+	warnIfError(ctx, currentBackend.Gauge(ctx, g.Name, n, tags, g.Rate.Rate()))
 }

@@ -11,5 +11,5 @@ type SetCounter collector
 // The last parameter is an arbitrary array of tags as maps.
 func (c *SetCounter) CountUnique(ctx context.Context, value string, ts ...Tags) {
 	tags := getStatsTags(ctx, ts...)
-	Set(ctx, c.Name, value, tags, c.Rate.Rate())
+	warnIfError(ctx, currentBackend.Set(ctx, c.Name, value, tags, c.Rate.Rate()))
 }
