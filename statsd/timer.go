@@ -8,7 +8,7 @@ import (
 // Timer represents a timer-type metric, which takes durations.
 // It uses histograms, which is a datadog-specific extension.
 // https://docs.datadoghq.com/developers/metrics/histograms/
-type Timer Collector
+type Timer collector
 
 // Duration takes a time.Duration -- the time to complete the indicated
 // operation -- and submits it to statsd.
@@ -16,7 +16,7 @@ type Timer Collector
 // The last parameter is an arbitrary array of tags as maps.
 func (t *Timer) Duration(ctx context.Context, n time.Duration, ts ...Tags) {
 	tags := getStatsTags(ctx, ts...)
-	Distribution(ctx, t.Name, n.Seconds()*1000, tags, t.Rate.Rate())
+	warnIfError(ctx, currentBackend.Distribution(ctx, t.Name, n.Seconds()*1000, tags, t.Rate.Rate()))
 }
 
 // Time runs a function, timing its execution, and submits the resulting
