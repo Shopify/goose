@@ -30,10 +30,6 @@ type Backend interface {
 	Histogram(ctx context.Context, name string, value float64, tags []string, rate float64) error
 	// Distribution tracks the statistical distribution of a set of values across your infrastructure.
 	Distribution(ctx context.Context, name string, value float64, tags []string, rate float64) error
-	// Decr is just Count of -1
-	Decr(ctx context.Context, name string, tags []string, rate float64) error
-	// Incr is just Count of 1
-	Incr(ctx context.Context, name string, tags []string, rate float64) error
 	// Set counts the number of unique elements in a group.
 	Set(ctx context.Context, name string, value string, tags []string, rate float64) error
 	// Timing sends timing information, it is an alias for TimeInMilliseconds
@@ -86,16 +82,6 @@ func Histogram(ctx context.Context, name string, value float64, tags []string, r
 // Distribution tracks the statistical distribution of a set of values across your infrastructure.
 func Distribution(ctx context.Context, name string, value float64, tags []string, rate float64) {
 	warnIfError(ctx, currentBackend.Distribution(ctx, name, value, tags, rate))
-}
-
-// Decr is just Count of -1
-func Decr(ctx context.Context, name string, tags []string, rate float64) {
-	warnIfError(ctx, currentBackend.Decr(ctx, name, tags, rate))
-}
-
-// Incr is just Count of 1
-func Incr(ctx context.Context, name string, tags []string, rate float64) {
-	warnIfError(ctx, currentBackend.Incr(ctx, name, tags, rate))
 }
 
 // Set counts the number of unique elements in a group.
