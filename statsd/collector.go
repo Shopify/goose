@@ -1,9 +1,7 @@
 package statsd
 
-// Collector represents a metric that can be collected. It knows about the
-// metric name and sampling rate, and supports a Collect method to submit a
-// metric to statsd.
-type Collector struct {
+// collector represents a metric that can be collected.
+type collector struct {
 	Name string
 	Rate sampleRate // 0 (default value) is interpreted as 100% (1.0)
 }

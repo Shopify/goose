@@ -4,7 +4,7 @@ import "context"
 
 // Counter represents a count-type metric, which takes increments.
 // https://docs.datadoghq.com/developers/metrics/counts/
-type Counter Collector
+type Counter collector
 
 // Count takes an integer -- typically 1 -- and increments the counter by
 // this value.

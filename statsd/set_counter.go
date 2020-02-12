@@ -4,7 +4,7 @@ import "context"
 
 // SetCounter represents a set-type metric, which counts unique strings.
 // https://docs.datadoghq.com/developers/metrics/sets/
-type SetCounter Collector
+type SetCounter collector
 
 // CountUnique will count the number of unique elements in a group.
 //

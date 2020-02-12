@@ -4,7 +4,7 @@ import "context"
 
 // Gaugor represents a gauge-type metric, which takes absolute values.
 // https://docs.datadoghq.com/developers/metrics/gauges/
-type Gaugor Collector
+type Gaugor collector
 
 // Gauge takes a float64 and sets the indicated gauge in statsd to this value.
 //
