@@ -46,14 +46,6 @@ func (b *datadogBackend) Distribution(ctx context.Context, name string, value fl
 	return b.client.Distribution(name, value, tags, rate)
 }
 
-func (b *datadogBackend) Decr(ctx context.Context, name string, tags []string, rate float64) error {
-	return b.client.Decr(name, tags, rate)
-}
-
-func (b *datadogBackend) Incr(ctx context.Context, name string, tags []string, rate float64) error {
-	return b.client.Incr(name, tags, rate)
-}
-
 func (b *datadogBackend) Set(ctx context.Context, name string, value string, tags []string, rate float64) error {
 	return b.client.Set(name, value, tags, rate)
 }

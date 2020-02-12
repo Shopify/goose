@@ -34,14 +34,6 @@ func (b *forwardingBackend) Distribution(ctx context.Context, name string, value
 	return b.handler(ctx, "distribution", name, value, tags, rate)
 }
 
-func (b *forwardingBackend) Decr(ctx context.Context, name string, tags []string, rate float64) error {
-	return b.handler(ctx, "decr", name, nil, tags, rate)
-}
-
-func (b *forwardingBackend) Incr(ctx context.Context, name string, tags []string, rate float64) error {
-	return b.handler(ctx, "incr", name, nil, tags, rate)
-}
-
 func (b *forwardingBackend) Set(ctx context.Context, name string, value string, tags []string, rate float64) error {
 	return b.handler(ctx, "set", name, value, tags, rate)
 }

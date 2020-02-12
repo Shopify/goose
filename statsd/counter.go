@@ -17,14 +17,12 @@ func (c *Counter) Count(ctx context.Context, n int64, ts ...Tags) {
 
 // Incr is basically the same as Count(1)
 func (c *Counter) Incr(ctx context.Context, ts ...Tags) {
-	tags := getStatsTags(ctx, ts...)
-	Incr(ctx, c.Name, tags, c.Rate.Rate())
+	c.Count(ctx, 1, ts...)
 }
 
 // Decr is basically the same as Count(-1)
 func (c *Counter) Decr(ctx context.Context, ts ...Tags) {
-	tags := getStatsTags(ctx, ts...)
-	Decr(ctx, c.Name, tags, c.Rate.Rate())
+	c.Count(ctx, -1, ts...)
 }
 
 // SuccessCount is the same as calling Count but adds a `success` tag.

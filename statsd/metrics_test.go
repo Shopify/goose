@@ -37,28 +37,6 @@ func TestCount(t *testing.T) {
 	backend.AssertCalled(t, "Count", context.Background(), "some_cmd", int64(100), []string{"tags"}, DefaultRate)
 }
 
-func TestIncr(t *testing.T) {
-	m := New("some_cmd", DefaultRate, "tags")
-
-	backend := new(mocks.Backend)
-	backend.On("Incr", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	SetBackend(backend)
-
-	m.Incr()
-	backend.AssertCalled(t, "Incr", context.Background(), "some_cmd", []string{"tags"}, DefaultRate)
-}
-
-func TestDecr(t *testing.T) {
-	m := New("some_ctr", 0.3, "t1", "t2")
-
-	backend := new(mocks.Backend)
-	backend.On("Decr", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	SetBackend(backend)
-
-	m.Decr()
-	backend.AssertCalled(t, "Decr", context.Background(), "some_ctr", []string{"t1", "t2"}, 0.3)
-}
-
 func TestDistribution(t *testing.T) {
 	m := New("thing", 0.3, "t1", "t2")
 
