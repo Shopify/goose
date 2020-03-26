@@ -19,7 +19,7 @@ type setter struct {
 }
 
 func (s *setter) Done(ctx context.Context, data interface{}, ttl time.Duration) error {
-	_, err := s.store.setData(ctx, s.key, data, ttl)
+	err := s.store.setData(ctx, s.key, data, ttl)
 	// The error can be overwritten below, so log it here just in case.
 	if err != nil {
 		log(ctx, err).Warn("unable to set data")
