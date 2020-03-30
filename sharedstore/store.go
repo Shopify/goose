@@ -19,9 +19,9 @@ var log = logger.New("sharedstore")
 type Store interface {
 	// GetOrLock returns a Getter, which is able to retrieve the data and/or a Setter,
 	// which can be invoked to set the data and release the locks.
-	GetOrLock(ctx context.Context, key string) (Getter, Setter)
-	getData(ctx context.Context, key string) (*cache.Item, error)
-	setData(ctx context.Context, key string, data interface{}, ttl time.Duration) (*cache.Item, error)
+	GetOrLock(ctx context.Context, key string, dataPtr interface{}) (Getter, Setter)
+	getData(ctx context.Context, key string, dataPtr interface{}) error
+	setData(ctx context.Context, key string, data interface{}, ttl time.Duration) error
 
 	isLocked(ctx context.Context, key string) (bool, error)
 	unlock(ctx context.Context, key string) error
@@ -59,18 +59,17 @@ func (s *store) Tomb() *tomb.Tomb {
 	return s.lockMap.Tomb()
 }
 
-func (s *store) GetOrLock(ctx context.Context, key string) (Getter, Setter) {
-	item, err := s.getData(ctx, key)
-	if err != nil {
+func (s *store) GetOrLock(ctx context.Context, key string, dataPtr interface{}) (Getter, Setter) {
+	err := s.getData(ctx, key, dataPtr)
+	if err == nil {
+		return &resolvedGetter{}, nil
+	}
+	if err != cache.ErrCacheMiss {
 		if isTemporaryError(err) {
 			log(ctx, err).Warn("temporary client error")
 		} else {
 			log(ctx, err).Error("unexpected client error")
 		}
-	} else if item != nil {
-		return &resolvedGetter{
-			item: item,
-		}, nil
 	}
 
 	promise, gotLock := s.lockMap.WaitOrLock(key, s.lockExpiry)
@@ -87,6 +86,7 @@ func (s *store) GetOrLock(ctx context.Context, key string) (Getter, Setter) {
 			promise: promise,
 			key:     key,
 			store:   s,
+			dataPtr: dataPtr,
 		}, setter
 	}
 
@@ -103,41 +103,35 @@ func (s *store) GetOrLock(ctx context.Context, key string) (Getter, Setter) {
 	} else if !ok {
 		// A thread on another instance has the lock
 		return &pollGetter{
-			key:   key,
-			store: s,
+			key:     key,
+			store:   s,
+			dataPtr: dataPtr,
 		}, setter
 	}
 
 	return nil, setter
 }
 
-func (s *store) getData(ctx context.Context, key string) (*cache.Item, error) {
+func (s *store) getData(ctx context.Context, key string, dataPtr interface{}) error {
 	log(ctx, nil).WithField("key", key).Debug("retrieving item")
 
-	return s.client.Get(key)
+	return s.client.Get(key, dataPtr)
 }
 
-func (s *store) setData(ctx context.Context, key string, data interface{}, ttl time.Duration) (*cache.Item, error) {
+func (s *store) setData(ctx context.Context, key string, data interface{}, ttl time.Duration) error {
 	log(ctx, nil).WithField("key", key).Debug("setting item")
 
-	item := cache.Item{
-		Data:       data,
-		Expiration: time.Now().Add(ttl),
+	if err := s.client.Set(key, data, time.Now().Add(ttl)); err != nil {
+		return errors.Wrap(err, "unable to set item")
 	}
 
-	if err := s.client.Set(key, &item); err != nil {
-		return nil, errors.Wrap(err, "unable to set item")
-	}
-
-	return &item, nil
+	return nil
 }
 
 func (s *store) lock(ctx context.Context, key string) (bool, error) {
 	log(ctx, nil).WithField("key", key).Debug("locking item")
 
-	err := s.client.Add(key+".lock", &cache.Item{
-		Expiration: time.Now().Add(s.lockExpiry),
-	})
+	err := s.client.Add(key+".lock", true, time.Now().Add(s.lockExpiry))
 	if err == nil {
 		return true, nil
 	}
@@ -153,8 +147,11 @@ func (s *store) lock(ctx context.Context, key string) (bool, error) {
 func (s *store) isLocked(ctx context.Context, key string) (bool, error) {
 	log(ctx, nil).WithField("key", key).Debug("checking item lock")
 
-	item, err := s.client.Get(key + ".lock")
-	locked := item != nil
+	var locked bool
+	err := s.client.Get(key+".lock", &locked)
+	if err == cache.ErrCacheMiss {
+		return false, nil
+	}
 	return locked, err
 }
 

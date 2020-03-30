@@ -4,29 +4,25 @@ import (
 	"context"
 	"time"
 
-	cache "github.com/Shopify/go-cache/pkg"
-
 	"github.com/Shopify/goose/lockmap"
 )
 
 // Getter can wait for its internal condition to be ready,
 // such that it can return the desired data.
 type Getter interface {
-	Wait(ctx context.Context) (*cache.Item, error)
+	Wait(ctx context.Context) error
 	WouldWait(ctx context.Context) bool
 }
 
 // resolvedGetter is essentially a noop, the data is already available.
-type resolvedGetter struct {
-	item *cache.Item
-}
+type resolvedGetter struct{}
 
 func (g *resolvedGetter) WouldWait(ctx context.Context) bool {
 	return false
 }
 
-func (g *resolvedGetter) Wait(ctx context.Context) (*cache.Item, error) {
-	return g.item, ctx.Err()
+func (g *resolvedGetter) Wait(ctx context.Context) error {
+	return ctx.Err()
 }
 
 // promiseGetter waits on a condition to be signaled.
@@ -35,6 +31,7 @@ type promiseGetter struct {
 	key     string
 	store   Store
 	promise lockmap.Promise
+	dataPtr interface{}
 }
 
 func (g *promiseGetter) WouldWait(ctx context.Context) bool {
@@ -48,12 +45,12 @@ func (g *promiseGetter) WouldWait(ctx context.Context) bool {
 	}
 }
 
-func (g *promiseGetter) Wait(ctx context.Context) (*cache.Item, error) {
+func (g *promiseGetter) Wait(ctx context.Context) error {
 	select {
 	case <-g.promise:
-		return g.store.getData(ctx, g.key)
+		return g.store.getData(ctx, g.key, g.dataPtr)
 	case <-ctx.Done():
-		return nil, ctx.Err()
+		return ctx.Err()
 	}
 }
 
@@ -62,8 +59,9 @@ const pollingInterval = 100 * time.Millisecond
 // pollGetter polls the store periodically until the key is unlocked.
 // Typically, it waits for another thread on _another_ store instance to finish.
 type pollGetter struct {
-	key   string
-	store Store
+	key     string
+	store   Store
+	dataPtr interface{}
 }
 
 func (g *pollGetter) WouldWait(ctx context.Context) bool {
@@ -76,7 +74,7 @@ func (g *pollGetter) WouldWait(ctx context.Context) bool {
 	}
 }
 
-func (g *pollGetter) Wait(ctx context.Context) (*cache.Item, error) {
+func (g *pollGetter) Wait(ctx context.Context) error {
 	ticker := time.NewTicker(pollingInterval)
 	defer ticker.Stop()
 
@@ -90,13 +88,13 @@ func (g *pollGetter) Wait(ctx context.Context) (*cache.Item, error) {
 				g.store.broadcast(ctx, g.key)
 
 				if err != nil {
-					return nil, err
+					return err
 				}
 
-				return g.store.getData(ctx, g.key)
+				return g.store.getData(ctx, g.key, g.dataPtr)
 			}
 		case <-ctx.Done():
-			return nil, ctx.Err()
+			return ctx.Err()
 		}
 	}
 }

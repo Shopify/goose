@@ -15,21 +15,21 @@ func Test_promiseGetter(t *testing.T) {
 	store := New(client, time.Second)
 	store.Tomb().Go(store.Run)
 
-	sub, prov := store.GetOrLock(ctx, "foo")
+	var data string
+	sub, prov := store.GetOrLock(ctx, "foo", &data)
 
 	assert.Nil(t, sub, "should not have a getter")
 	assert.IsType(t, &setter{}, prov, "should have a setter")
 
-	sub2, prov2 := store.GetOrLock(ctx, "foo")
+	var data2 string
+	sub2, prov2 := store.GetOrLock(ctx, "foo", &data2)
 	assert.IsType(t, &promiseGetter{}, sub2, "should have a getter")
 	assert.True(t, sub2.WouldWait(ctx))
 	assert.IsType(t, &setter{}, prov2, "should have a setter")
 
-	done := make(chan *cache.Item)
+	done := make(chan error)
 	go func() {
-		item, err := sub2.Wait(ctx)
-		assert.NoError(t, err)
-		done <- item
+		done <- sub2.Wait(ctx)
 	}()
 	<-time.After(100 * time.Millisecond)
 
@@ -37,8 +37,9 @@ func Test_promiseGetter(t *testing.T) {
 	assert.NoError(t, err)
 
 	select {
-	case item := <-done:
-		assert.Equal(t, "bar", item.Data.(string))
+	case err := <-done:
+		assert.NoError(t, err)
+		assert.Equal(t, "bar", data2)
 		assert.False(t, sub2.WouldWait(ctx), "should not wait after done")
 	case <-time.After(1 * time.Second):
 		assert.Fail(t, "took too long to complete")
@@ -52,7 +53,8 @@ func Test_pollGetter(t *testing.T) {
 	store := New(client, time.Second)
 	store.Tomb().Go(store.Run)
 
-	sub, prov := store.GetOrLock(ctx, "foo")
+	var data string
+	sub, prov := store.GetOrLock(ctx, "foo", &data)
 
 	assert.Nil(t, sub, "should not have a getter")
 	assert.IsType(t, &setter{}, prov, "should have a setter")
@@ -61,16 +63,15 @@ func Test_pollGetter(t *testing.T) {
 	store2 := New(client, time.Second)
 	store2.Tomb().Go(store.Run)
 
-	sub2, prov2 := store2.GetOrLock(ctx, "foo")
+	var data2 string
+	sub2, prov2 := store2.GetOrLock(ctx, "foo", &data2)
 	assert.IsType(t, &pollGetter{}, sub2, "should have a getter")
 	assert.True(t, sub2.WouldWait(ctx))
 	assert.IsType(t, &setter{}, prov2, "should have a setter")
 
-	done := make(chan *cache.Item)
+	done := make(chan error)
 	go func() {
-		item, err := sub2.Wait(ctx)
-		assert.NoError(t, err)
-		done <- item
+		done <- sub2.Wait(ctx)
 	}()
 	<-time.After(100 * time.Millisecond)
 
@@ -78,8 +79,9 @@ func Test_pollGetter(t *testing.T) {
 	assert.NoError(t, err)
 
 	select {
-	case item := <-done:
-		assert.Equal(t, "bar", item.Data.(string))
+	case err := <-done:
+		assert.NoError(t, err)
+		assert.Equal(t, "bar", data2)
 		assert.True(t, sub2.WouldWait(ctx), "should still advertise it would wait after done")
 	case <-time.After(1 * time.Second):
 		assert.Fail(t, "took too long to complete")
@@ -95,7 +97,8 @@ func Test_promiseGetter_other_instance(t *testing.T) {
 	store := New(client, time.Second)
 	store.Tomb().Go(store.Run)
 
-	sub, prov := store.GetOrLock(ctx, "foo")
+	var data string
+	sub, prov := store.GetOrLock(ctx, "foo", &data)
 
 	assert.Nil(t, sub, "should not have a getter")
 	assert.IsType(t, &setter{}, prov, "should have a setter")
@@ -104,24 +107,24 @@ func Test_promiseGetter_other_instance(t *testing.T) {
 	store2 := New(client, time.Second)
 	store2.Tomb().Go(store.Run)
 
-	sub2, prov2 := store2.GetOrLock(ctx, "foo")
+	var data2 string
+	sub2, prov2 := store2.GetOrLock(ctx, "foo", &data2)
 	assert.IsType(t, &pollGetter{}, sub2, "should have a getter")
 	assert.IsType(t, &setter{}, prov2, "should have a setter")
 
-	sub3, prov3 := store2.GetOrLock(ctx, "foo")
+	var data3 string
+	sub3, prov3 := store2.GetOrLock(ctx, "foo", &data3)
 	assert.IsType(t, &promiseGetter{}, sub3, "should have a getter")
 	assert.IsType(t, &setter{}, prov3, "should have a setter")
 
 	go func() {
-		_, err := sub2.Wait(ctx)
+		err := sub2.Wait(ctx)
 		assert.NoError(t, err)
 	}()
 
-	done := make(chan *cache.Item)
+	done := make(chan error)
 	go func() {
-		item, err := sub3.Wait(ctx)
-		assert.NoError(t, err)
-		done <- item
+		done <- sub3.Wait(ctx)
 	}()
 	<-time.After(100 * time.Millisecond)
 
@@ -129,9 +132,9 @@ func Test_promiseGetter_other_instance(t *testing.T) {
 	assert.NoError(t, err)
 
 	select {
-	case item := <-done:
-		assert.IsType(t, &cache.Item{}, item)
-		assert.Equal(t, "bar", item.Data.(string))
+	case err := <-done:
+		assert.NoError(t, err)
+		assert.Equal(t, "bar", data3)
 	case <-time.After(1 * time.Second):
 		assert.Fail(t, "took too long to complete")
 	}
