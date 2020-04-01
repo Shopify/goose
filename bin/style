@@ -19,7 +19,8 @@ class Style
     private
 
     def install_path
-      File.join(ENV.fetch('GOPATH', ENV.fetch('HOME')), 'bin')
+      gopath = ENV.fetch('GOPATH', ENV.fetch('HOME')).split(':').first
+      File.join(gopath, 'bin')
     end
 
     def bin_path
