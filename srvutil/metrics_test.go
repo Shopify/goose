@@ -75,7 +75,7 @@ func TestRequestMetricsMiddleware(t *testing.T) {
 	assert.Equal(t, "hello world", string(body))
 
 	assert.NotNil(t, recordedTags, "should have recorded a %s tag", metrics.HTTPRequest.Name)
-	assert.Equal(t, []string{"route:/hello/@name", "route_name:world", "statusClass:2xx", "statusCode:200", "success:true"}, recordedTags)
+	assert.Equal(t, []string{"route:/hello/@name", "statusClass:2xx", "statusCode:200", "success:true"}, recordedTags)
 
 	output := strings.ToLower(logging.String())
 	assert.Contains(t, output, "statusclass=2xx")
