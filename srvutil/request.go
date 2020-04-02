@@ -55,16 +55,12 @@ func buildRouteContext(r *http.Request) context.Context {
 
 	// Adds the route as log field and tag.
 	ctx = statsd.WithTag(ctx, RouteKey, tpl)
-	ctx = logger.WithField(ctx, RouteKey, tpl)
 
 	// Adds the mux variables as log fields only, but not tags.
-	vars := mux.Vars(r)
-	fields := logrus.Fields{}
-
-	for k, v := range vars {
+	fields := logrus.Fields{RouteKey: tpl}
+	for k, v := range mux.Vars(r) {
 		fields[fmt.Sprintf("%s_%s", RouteKey, k)] = v
 	}
-
 	ctx = logger.WithFields(ctx, fields)
 
 	return ctx
