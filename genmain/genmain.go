@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"reflect"
 	"strings"
 	"sync"
 	"syscall"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"gopkg.in/tomb.v2"
 
 	"github.com/Shopify/goose/logger"
 	"github.com/Shopify/goose/metrics"
@@ -23,18 +24,13 @@ var log = logger.New("genmain")
 
 const defaultShutdownDeadline = 3 * time.Second
 
-// Component is used to represent various "components". At a high level, main()
-// essentially cobbles together a few components whose lifecycles are managed
-// by Tombs. `Component` allows us to treat them as black boxes.
-type Component safely.Runnable
-
 var (
 	// ErrCanOnlyRunOnce is returned when `RunAndWait` is called after already
 	// being called.
 	ErrCanOnlyRunOnce = errors.New("can only run once")
 
 	// ErrShutdownRequested can be used as a reason for `Kill` that indicates no
-	// error has occurred, just that the components should gracfeully exit.
+	// error has occurred, just that the components should gracefully exit.
 	ErrShutdownRequested = errors.New("shutdown requested")
 )
 
@@ -64,6 +60,56 @@ func (s *SignalError) Error() string {
 	return fmt.Sprintf("received signal: %v", s.signal)
 }
 
+func waitAny(components []Component, deadline <-chan time.Time) bool {
+	cases := make([]reflect.SelectCase, len(components)+1)
+	for i, component := range components {
+		cases[i] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(component.Tomb().Dead())}
+	}
+	cases[len(components)] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(deadline)}
+	chosen, _, _ := reflect.Select(cases)
+
+	return chosen < len(components)
+}
+
+func dependencies(component Component) []Component {
+	if c, ok := component.(ComponentWithDependencies); ok {
+		return c.Dependencies()
+	}
+
+	return nil
+}
+
+func inverseDependencies(components []Component) map[Component][]Component {
+	inverse := make(map[Component][]Component, len(components))
+	for _, component := range components {
+		for _, dep := range dependencies(component) {
+			inverse[dep] = append(inverse[dep], component)
+		}
+	}
+	return inverse
+}
+
+func isReadyToKill(inverse map[Component][]Component, component Component) bool {
+	if deps, ok := inverse[component]; ok {
+		for _, dep := range deps {
+			if !isDead(dep.Tomb()) {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+func isDead(t *tomb.Tomb) bool {
+	select {
+	case <-t.Dead():
+		return true
+	default:
+		return false
+	}
+}
+
 // Kill will terminate all running components with a given reason
 func (m *Main) Kill(reason error) {
 	// Acquire the lock to ensure the first call's `err` is the one that all components
@@ -72,8 +118,50 @@ func (m *Main) Kill(reason error) {
 	defer m.l.Unlock()
 
 	log(nil, reason).Info("shutting down")
-	for _, c := range m.components {
-		c.Tomb().Kill(reason)
+	shutdownStart := time.Now()
+	deadline := time.After(m.shutdownDeadline)
+
+	ctx := context.Background()
+	alive := m.components
+	inverseDeps := inverseDependencies(m.components)
+
+	for len(alive) > 0 {
+		var killed []Component
+
+		for _, component := range alive {
+			if isReadyToKill(inverseDeps, component) {
+				component.Tomb().Kill(reason)
+				killed = append(killed, component)
+			}
+		}
+
+		if !waitAny(killed, deadline) {
+			for _, component := range alive {
+				metrics.GenMainShutdown.Duration(ctx, time.Since(shutdownStart), statsd.Tags{
+					"success":       false,
+					"deadline":      m.shutdownDeadline,
+					"mainComponent": componentName(component),
+				})
+				log(ctx, component.Tomb().Err()).Error("component took too long to shut down")
+			}
+			return
+		}
+
+		i := 0
+		for _, component := range alive {
+			if isDead(component.Tomb()) {
+				metrics.GenMainShutdown.Duration(ctx, time.Since(shutdownStart), statsd.Tags{
+					"success":       true,
+					"deadline":      m.shutdownDeadline,
+					"mainComponent": componentName(component),
+				})
+				log(ctx, component.Tomb().Err()).Debug("component shutdown notification")
+			} else {
+				alive[i] = component
+				i++
+			}
+		}
+		alive = alive[0:i]
 	}
 }
 
@@ -118,35 +206,17 @@ func (m *Main) RunAndWait() error {
 		safely.Run(c)
 
 		go func(comp Component) {
-			<-comp.Tomb().Dying()
-			log(nil, comp.Tomb().Err()).
+			<-comp.Tomb().Dead()
+			err := comp.Tomb().Err()
+			log(nil, err).
 				WithField("mainComponent", componentName(comp)).
 				Info("process exited")
-			shutdown <- ErrShutdownRequested
+			shutdown <- err
 		}(c)
 	}
 
 	reason := <-shutdown
-
-	shutdownStart := time.Now()
-	deadline := time.After(m.shutdownDeadline)
-
 	m.Kill(reason)
-
-	for _, comp := range m.components {
-		ctx = statsd.WithTagLogFields(ctx, logrus.Fields{
-			"deadline":      m.shutdownDeadline,
-			"mainComponent": componentName(comp),
-		})
-		select {
-		case <-comp.Tomb().Dead():
-			metrics.GenMainShutdown.Duration(ctx, time.Since(shutdownStart), statsd.Tags{"success": true})
-			log(ctx, comp.Tomb().Err()).Debug("component shutdown notification")
-		case <-deadline:
-			metrics.GenMainShutdown.Duration(ctx, time.Since(shutdownStart), statsd.Tags{"success": false})
-			log(ctx, comp.Tomb().Err()).Error("component took too long to shut down")
-		}
-	}
 
 	log(nil, nil).Debug("final shutdown message")
 
