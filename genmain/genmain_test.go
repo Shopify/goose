@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/tomb.v2"
 
 	"github.com/Shopify/goose/genmain"
@@ -52,6 +53,117 @@ func (c *hangingComponent) Tomb() *tomb.Tomb {
 func (c *hangingComponent) Run() error {
 	<-time.After(c.hangTime)
 	return c.tomb.Err()
+}
+
+type compWithDeps struct {
+	tomb    tomb.Tomb
+	deps    []genmain.Component
+	started chan struct{}
+	done    chan error
+}
+
+func (c *compWithDeps) Tomb() *tomb.Tomb {
+	return &c.tomb
+}
+
+func (c *compWithDeps) Run() error {
+	close(c.started)
+	return <-c.done
+}
+
+func (c *compWithDeps) Dependencies() []genmain.Component {
+	return c.deps
+}
+
+func TestWaitForDependencies(t *testing.T) {
+	leaf1 := &compWithDeps{started: make(chan struct{}), done: make(chan error)}
+	leaf2 := &compWithDeps{started: make(chan struct{}), done: make(chan error)}
+	parent1 := &compWithDeps{started: make(chan struct{}), done: make(chan error), deps: []genmain.Component{leaf1, leaf2}}
+	parent2 := &compWithDeps{started: make(chan struct{}), done: make(chan error), deps: []genmain.Component{leaf2}}
+	other := &compWithDeps{started: make(chan struct{}), done: make(chan error)}
+
+	main := genmain.New(other, leaf1, leaf2, parent1, parent2)
+	done := make(chan error)
+	go func() {
+		done <- main.RunAndWait()
+	}()
+
+	<-other.started
+	<-leaf1.started
+	<-leaf2.started
+	<-parent1.started
+	<-parent2.started
+
+	go main.Kill(errors.New("reason"))
+
+	select {
+	case <-other.Tomb().Dying():
+		// ok
+	case <-time.After(250 * time.Millisecond):
+		t.Fatal("deadline exceeded")
+	}
+
+	close(other.done)
+
+	select {
+	case <-other.Tomb().Dead():
+		// ok
+	case <-time.After(250 * time.Millisecond):
+		t.Fatal("deadline exceeded")
+	}
+
+	select {
+	case <-parent1.Tomb().Dying():
+	case <-time.After(250 * time.Millisecond):
+		t.Fatal("deadline exceeded")
+	}
+
+	select {
+	case <-parent2.Tomb().Dying():
+	case <-time.After(250 * time.Millisecond):
+		t.Fatal("deadline exceeded")
+	}
+
+	select {
+	case <-leaf1.Tomb().Dying():
+		t.Fatal("should not be dying yet")
+	case <-time.After(250 * time.Millisecond):
+		// ok
+	}
+
+	close(parent1.done)
+
+	select {
+	case <-leaf1.Tomb().Dying():
+	case <-time.After(250 * time.Millisecond):
+		t.Fatal("deadline exceeded")
+	}
+
+	close(leaf1.done)
+
+	select {
+	case <-leaf2.Tomb().Dying():
+		t.Fatal("should not be dying yet")
+	case <-time.After(250 * time.Millisecond):
+		// ok
+	}
+
+	close(parent2.done)
+
+	select {
+	case <-leaf2.Tomb().Dying():
+	case <-time.After(250 * time.Millisecond):
+		t.Fatal("deadline exceeded")
+	}
+
+	close(leaf2.done)
+
+	select {
+	case err := <-done:
+		require.EqualError(t, err, "reason")
+	case <-time.After(250 * time.Millisecond):
+		t.Fatal("deadline exceeded")
+	}
 }
 
 func TestKillPropagatesErrorToComponents(t *testing.T) {
@@ -104,8 +216,9 @@ func TestShutdownDeadline(t *testing.T) {
 	main.SetShutdownDeadline(deadline)
 
 	start := time.Now()
+	go main.RunAndWait()
+
 	main.Kill(nil)
-	main.RunAndWait()
 	shutdownTime := time.Since(start)
 
 	assert.True(t, shutdownTime >= deadline, "genmain should wait until deadline before killing a hanging component")
