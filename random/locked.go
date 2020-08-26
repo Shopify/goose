@@ -10,7 +10,7 @@ func NewLocked() *rand.Rand {
 	return rand.New(NewLockedSource(NewSource()))
 }
 
-// NewLockedSource wraps the with a mutex. To be used for concurrent access.
+// NewLockedSource wraps the Source with a mutex. To be used for concurrent access.
 func NewLockedSource(src rand.Source) rand.Source {
 	return &lockedSource{src: src}
 }

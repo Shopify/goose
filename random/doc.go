@@ -1,3 +1,4 @@
+// Package random provides an interface on top of math/rand to ease testing.
 package random
 
 // For production use:
