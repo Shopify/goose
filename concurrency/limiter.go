@@ -9,7 +9,10 @@ import (
 	"github.com/Shopify/goose/statsd"
 )
 
-const NoLimit uint = 0
+const (
+	NoLimit      uint  = 0
+	AlwaysRecord int32 = 0
+)
 
 type Limiter interface {
 	// Run executes a function, making sure at most a certain number of calls are executing simultaneously
@@ -50,7 +53,7 @@ func NewLimiterWithGauge(concurrency uint, gauge gaugor, tags statsd.Tags) Limit
 }
 
 func NewGauge(gauge gaugor, tags statsd.Tags) Limiter {
-	return NewSampledGauge(gauge, 0, tags)
+	return NewSampledGauge(gauge, AlwaysRecord, tags)
 }
 
 func NewSampledGauge(gauge gaugor, sampling int32, tags statsd.Tags) Limiter {
@@ -102,7 +105,7 @@ func (c *limiter) deltaAndMaybePublish(ctx context.Context, ptr *int32, delta in
 	if c.gauge == nil {
 		return
 	}
-	if c.sampling > 0 {
+	if c.sampling != AlwaysRecord {
 		counter := atomic.AddInt32(&c.sampleCounter, 1) // will overflow and loop gracefully.
 		if counter%c.sampling > 0 {
 			return
