@@ -21,6 +21,7 @@ require (
 	github.com/imdario/mergo v0.3.8
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
+	github.com/leononame/clock v0.1.6
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.4.2
@@ -28,6 +29,7 @@ require (
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
+	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5 // indirect
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637
 )
