@@ -95,9 +95,23 @@ func (hook *Hook) Fire(entry *logrus.Entry) error {
 
 	errWithStack := bugsnag_errors.New(notifyErr, skipFrames)
 
-	// Pass in our own metadata as well as the entry context, which might contain more data that Bugsnag can extract.
-	bugsnagErr := bugsnag.Notify(errWithStack, metadata, entry.Context)
-	if bugsnagErr != nil {
+	// If bugsnag is set to asynchronous delivery, but this entry looks likely to
+	// indicate that the program will terminate right away, we force this one to
+	// delivery synchronously.
+	//
+	// We pass in our own metadata as well as the entry context, which might
+	// contain more data that Bugsnag can extract.
+	if !bugsnag.Config.Synchronous && entry.Level == logrus.FatalLevel || entry.Level == logrus.PanicLevel {
+		// copy contents
+		var config bugsnag.Configuration = bugsnag.Config
+		config.Synchronous = true
+		notifier := bugsnag.Notifier{Config: &config, RawData: nil}
+
+		// here we're using our custom notifier; below we're using bugsnag.defaultNotifier.
+		if bugsnagErr := notifier.Notify(errWithStack, metadata, entry.Context); bugsnagErr != nil {
+			return ErrBugsnagSendFailed{bugsnagErr}
+		}
+	} else if bugsnagErr := bugsnag.Notify(errWithStack, metadata, entry.Context); bugsnagErr != nil {
 		return ErrBugsnagSendFailed{bugsnagErr}
 	}
 
