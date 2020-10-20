@@ -16,13 +16,13 @@ func NewLockedSource(src rand.Source) rand.Source {
 }
 
 type lockedSource struct {
-	l   sync.RWMutex
+	l   sync.Mutex
 	src rand.Source
 }
 
 func (s *lockedSource) Int63() int64 {
-	s.l.RLock()
-	defer s.l.RUnlock()
+	s.l.Lock()
+	defer s.l.Unlock()
 
 	return s.src.Int63()
 }
