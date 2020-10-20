@@ -35,7 +35,7 @@ func (r *retryResolver) retry(fn func() error) (err error) {
 	}
 
 	if errors.As(err, &dnsError) && dnsError.Err == "server misbehaving" {
-		// Certain servers misbehaves and will very likely continue to do so.
+		// Certain servers misbehave and will very likely continue to do so.
 		// If the query was attempted several times and still results in a SERVFAIL, consider it permanent.
 
 		// Note that this code doesn't distinguish the edge case where the previous errors were a different temporary error.
