@@ -26,11 +26,25 @@ func NewRetryResolver(resolver Resolver, backoffs []time.Duration) Resolver {
 }
 
 func (r *retryResolver) retry(fn func() error) (err error) {
+	var dnsError *net.DNSError
 	err = fn()
-	for i := 0; i < len(r.backoffs) && err != nil && isTemporary(err); i++ {
+
+	for i := 0; i < len(r.backoffs) && errors.As(err, &dnsError) && dnsError.Temporary(); i++ {
 		time.Sleep(r.backoffs[i])
 		err = fn()
 	}
+
+	if errors.As(err, &dnsError) && dnsError.Err == "server misbehaving" {
+		// Certain servers misbehave and will very likely continue to do so.
+		// If the query was attempted several times and still results in a SERVFAIL, consider it permanent.
+
+		// Note that this code doesn't distinguish the edge case where the previous errors were a different temporary error.
+
+		// Modify the DNSError, regardless of whether it's wrapped.
+		// Since "err" holds a pointer to the DNSError, the returned error will contain the modified DNSError.
+		dnsError.IsTemporary = false
+	}
+
 	return err
 }
 
@@ -104,12 +118,4 @@ func (r *retryResolver) LookupAddr(ctx context.Context, addr string) (names []st
 		return err
 	})
 	return names, err
-}
-
-func isTemporary(err error) bool {
-	var dnsError *net.DNSError
-	if errors.As(err, &dnsError) && dnsError.Temporary() {
-		return true
-	}
-	return false
 }

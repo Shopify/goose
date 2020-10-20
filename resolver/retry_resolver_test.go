@@ -2,6 +2,8 @@ package resolver
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net"
 	"testing"
 	"time"
@@ -11,6 +13,25 @@ import (
 
 var temporaryError = &net.DNSError{Name: "foo", Err: "bar", IsTemporary: true}
 var permanentError = &net.DNSError{Name: "foo", Err: "baz"}
+
+func TestServFail(t *testing.T) {
+	t.Skip("Development test only")
+
+	for _, preferGo := range []bool{true, false} {
+		t.Run(fmt.Sprintf("preferGo %t", preferGo), func(t *testing.T) {
+			r := NewNetResolver(&net.Resolver{PreferGo: preferGo, StrictErrors: true})
+			r = NewRetryResolver(r, []time.Duration{0}) // Retry once
+
+			ctx := context.Background()
+			_, err := r.LookupTXT(ctx, "camera-de-surveillance.com") // Misbehaving server, always returning SERVFAIL
+
+			var dnsError *net.DNSError
+			require.True(t, errors.As(err, &dnsError))
+			require.False(t, dnsError.Temporary())
+			require.Equal(t, dnsError.Err, "server misbehaving")
+		})
+	}
+}
 
 func withRetry(t *testing.T, fn func(m *mockResolver, r Resolver)) {
 	m := NewMockResolver()
@@ -145,6 +166,17 @@ func TestNewRetryLookup(t *testing.T) {
 					m.On(method, tt.callArgs...).Return(makeErrorArgs(len(tt.returnArgs), permanentError)...).Once()
 					err := tt.call(t, r, false)
 					require.EqualError(t, err, "lookup foo: baz")
+				})
+			})
+
+			t.Run("retry servfail", func(t *testing.T) {
+				withRetry(t, func(m *mockResolver, r Resolver) {
+					m.On(method, tt.callArgs...).Return(makeErrorArgs(len(tt.returnArgs), &net.DNSError{Name: "foo", Err: "server misbehaving", IsTemporary: true})...).Times(3)
+					err := tt.call(t, r, false)
+
+					var dnsError *net.DNSError
+					require.True(t, errors.As(err, &dnsError))
+					require.False(t, dnsError.Temporary())
 				})
 			})
 
