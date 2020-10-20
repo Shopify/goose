@@ -16,7 +16,7 @@ type shuffleResolver struct {
 func NewShuffleResolver(lookup Resolver) Resolver {
 	return &shuffleResolver{
 		lookup: lookup,
-		rand:   random.New(),
+		rand:   random.NewLocked(),
 	}
 }
 
