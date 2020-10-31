@@ -125,7 +125,7 @@ func (ln stoppableKeepaliveListener) Accept() (net.Conn, error) {
 		if err != nil {
 			netErr, ok := err.(net.Error)
 
-			//If this is a timeout, then continue to wait for new connections
+			// If this is a timeout, then continue to wait for new connections
 			if ok && netErr.Timeout() && netErr.Temporary() {
 				continue
 			} else {

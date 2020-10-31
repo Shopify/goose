@@ -63,11 +63,11 @@ func (snagger *bugsnagger) buildData(err error, rawData ...interface{}) ([]inter
 	if err != nil {
 		bugsnagData = append(bugsnagData, bugsnaggo.ErrorClass{Name: extractErrorClass(err)})
 		context, cause = snagger.formatError(err)
-		//set the Error tab with details/stacktrace
+		// Set the Error tab with details/stacktrace
 		md["Error"] = Rows{"details": fmt.Sprintf("%+v", err)}
 	}
 
-	//extract more context/metadata from the rawData
+	// Extract more context/metadata from the rawData
 	for _, v := range rawData {
 		switch v := v.(type) {
 		case string:
@@ -174,7 +174,7 @@ func (snagger *bugsnagger) AutoNotify(rawData ...interface{}) {
 	}
 }
 
-//AutoRecover when deferred, records a panic to Bugsnag and recovers.
+// AutoRecover when deferred, records a panic to Bugsnag and recovers.
 func (snagger *bugsnagger) AutoRecover(rawData ...interface{}) {
 	if r := recover(); r != nil {
 		snagger.Notify(recoverError(r), rawData...)
@@ -193,7 +193,7 @@ func recoverError(e interface{}) error {
 	return err
 }
 
-//augment the bugnsag http middleware to add POST body to the request tab
+// Augment the bugsnag http middleware to add POST body to the request tab
 func httpRequestMiddleware(event *bugsnaggo.Event, config *bugsnaggo.Configuration) error {
 	for _, datum := range event.RawData {
 		if request, ok := datum.(*http.Request); ok {
@@ -260,7 +260,7 @@ func panicHandler() {
 	// If exitStatus >= 0, then we're the parent process and the panicwrap
 	// re-executed ourselves and completed. Just exit with the proper status.
 	if exitStatus >= 0 {
-		os.Exit(exitStatus)
+		os.Exit(exitStatus) // nolint:gocritic
 	}
 
 	// Otherwise, exitStatus < 0 means we're the child. Continue executing as

@@ -4,7 +4,7 @@ import "math/rand"
 
 // NewDummy returns a rand.Rand seeded with 0.
 func NewDummy() *rand.Rand {
-	return rand.New(NewDummySource())
+	return rand.New(NewDummySource()) //nolint:gosec
 }
 
 // NewDummySource returns a rand.Source seeded with 0.
