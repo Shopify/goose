@@ -91,14 +91,14 @@ func ExampleSelectKeys() {
 func TestEmptyContext(t *testing.T) {
 	ctx := context.Background()
 	// Using a basic type on purpose, disable linter
-	ctx = context.WithValue(ctx, "a", "b") // nolint: golint
+	ctx = context.WithValue(ctx, "a", "b") //nolint:golint,staticcheck
 	// Not showing up in tags
 	assert.Empty(t, getStatsTags(ctx))
 }
 
 func TestWithTags(t *testing.T) {
 	// Test that passing nil doesn't actually crash it, disable the linter
-	ctx := WithTags(nil, Tags{"a": "b", "c": "d"}) //nolint: staticcheck
+	ctx := WithTags(nil, Tags{"a": "b", "c": "d"}) //nolint:golint,staticcheck
 	ctx = WithTags(ctx, Tags{"a": "e", "f": "g"})
 
 	// Test it doesn't override
@@ -115,7 +115,7 @@ func TestWithTags_keyClash(t *testing.T) {
 
 	// tagsKey is an int declared as a contextKey, so trying to set an int shouldn't override the contextKey
 	// Using a basic type on purpose, disable linter
-	ctx = context.WithValue(ctx, int(tagsKey), "foo") //nolint: golint
+	ctx = context.WithValue(ctx, int(tagsKey), "foo") //nolint:golint,staticcheck
 
 	assert.Equal(t, []string{
 		"a:b",

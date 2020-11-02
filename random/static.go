@@ -4,7 +4,7 @@ import "math/rand"
 
 // NewStatic returns a rand.Rand that always returns the seeded value. Useful for tests.
 func NewStatic(value int64) *rand.Rand {
-	return rand.New(NewStaticSource(value))
+	return rand.New(NewStaticSource(value)) //nolint:gosec
 }
 
 // NewStaticSource returns a rand.Source that always returns the seeded value. Useful for tests.
