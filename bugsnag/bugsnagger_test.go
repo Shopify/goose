@@ -3,6 +3,8 @@ package bugsnag
 import (
 	"net/http"
 	"net/url"
+	"path"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -15,7 +17,8 @@ import (
 )
 
 var (
-	mSnagger *bugsnagger
+	mSnagger   *bugsnagger
+	projectDir string
 )
 
 func init() {
@@ -25,6 +28,12 @@ func init() {
 
 	mConfig := &bugsnaggo.Configuration{APIKey: "key"}
 	mSnagger = newBugsnagger(mConfig, mNotifier)
+
+	_, file, _, _ := runtime.Caller(0)
+	if !strings.HasSuffix(file, "goose/bugsnag/bugsnagger_test.go") {
+		panic("unable to determine project dir")
+	}
+	projectDir = path.Dir(path.Dir(file))
 }
 
 func TestSetup(t *testing.T) {
@@ -42,7 +51,7 @@ func TestSetup(t *testing.T) {
 	require.Equal(t, pack, bugsnaggo.Config.ProjectPackages[0])
 	require.Equal(t, "main*", bugsnaggo.Config.ProjectPackages[1])
 	require.Equal(t, "github.com/Shopify/goose/bugsnag", bugsnaggo.Config.ProjectPackages[2])
-	require.True(t, strings.Contains(bugsnaggo.Config.ProjectPackages[3], "github.com/Shopify/goose/*"))
+	require.True(t, strings.Contains(bugsnaggo.Config.ProjectPackages[3], projectDir+"/*"))
 	require.True(t, bugsnaggo.Config.Synchronous)
 }
 
