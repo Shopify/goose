@@ -8,7 +8,7 @@ require (
 	github.com/Shopify/go-cache v0.0.0-20200326183119-49710f9722f8
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
-	github.com/bugsnag/bugsnag-go v1.5.3
+	github.com/bugsnag/bugsnag-go v1.5.4
 	github.com/bugsnag/panicwrap v1.2.0
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect
 	github.com/golang/protobuf v1.3.3 // indirect
