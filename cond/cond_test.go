@@ -353,7 +353,7 @@ func TestRace(t *testing.T) {
 }
 
 func TestCond_Signal_random(t *testing.T) {
-	threads := 10000
+	threads := 1000
 	spread := 25 * time.Millisecond
 
 	c := NewCond(&sync.Mutex{})
