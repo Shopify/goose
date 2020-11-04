@@ -79,12 +79,13 @@ func TestBuildDataError_wrappedCause(t *testing.T) {
 
 func TestBuildDataError_urlError(t *testing.T) {
 	// url error
-	err := errors.Wrap(&url.Error{Op: "GET", URL: "lol.com", Err: errors.New("err")}, "url fail")
+	urlError := &url.Error{Op: "GET", URL: "lol.com", Err: errors.New("err")}
+	err := errors.Wrap(urlError, "url fail")
 	dataList, err := mSnagger.buildData(err)
 	require.Equal(t, "err", err.Error())
-	require.Equal(t, "GET lol.com: err", newBugsnagData(dataList).getBugsnaggoErrorClass())
+	require.Equal(t, urlError.Error(), newBugsnagData(dataList).getBugsnaggoErrorClass())
 	require.True(t, newBugsnagData(dataList).hasErrTab())
-	require.Equal(t, "url fail: GET lol.com", newBugsnagData(dataList).getContext())
+	require.Equal(t, "url fail: "+urlError.Error(), newBugsnagData(dataList).getContext()+": err")
 }
 
 func TestBuildDataError_http2Stream(t *testing.T) {

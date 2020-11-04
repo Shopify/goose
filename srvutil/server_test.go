@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -86,8 +87,8 @@ func TestNewServer(t *testing.T) {
 
 	// No longer works
 	res, err = http.Get(u)
-	errMsg := fmt.Sprintf("Get %s: dial tcp %s: connect: connection refused", u, s.Addr().String())
-	assert.EqualError(t, err, errMsg)
+	assert.NotNil(t, err)
+	assert.True(t, strings.HasSuffix(err.Error(), ": connection refused"))
 	assert.Nil(t, res)
 }
 
@@ -166,8 +167,8 @@ func TestNewServerFromFactory(t *testing.T) {
 
 	// No longer works
 	res, err = http.Get(u)
-	errMsg := fmt.Sprintf("Get %s: dial tcp %s: connect: connection refused", u, s.Addr().String())
-	assert.EqualError(t, err, errMsg)
+	assert.NotNil(t, err)
+	assert.True(t, strings.HasSuffix(err.Error(), ": connection refused"))
 	assert.Nil(t, res)
 }
 
@@ -232,7 +233,7 @@ func TestStoppableKeepaliveListener_Accept(t *testing.T) {
 
 	// No longer works
 	res, err := http.Get(u)
-	errMsg := fmt.Sprintf("Get %s: dial tcp %s: connect: connection refused", u, s.Addr().String())
-	assert.EqualError(t, err, errMsg)
+	assert.NotNil(t, err)
+	assert.True(t, strings.HasSuffix(err.Error(), ": connection refused"))
 	assert.Nil(t, res)
 }
