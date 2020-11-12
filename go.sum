@@ -14,8 +14,8 @@ cloud.google.com/go/storage v1.0.0/go.mod h1:IhtSnM/ZTZV8YYJWCY8RULGVqBDmpoyjwiy
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/DataDog/datadog-go v3.4.0+incompatible h1:LZ0OTmlvhCBT0VYUvhGu8Lrc7WqNCj6Zw9HnMi0V6mA=
-github.com/DataDog/datadog-go v3.4.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
+github.com/DataDog/datadog-go v3.7.2+incompatible h1:o4QtYjBU/rG58VPh8Ne6F65YiMY5/v5q4WdY/HvRYMQ=
+github.com/DataDog/datadog-go v3.7.2+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/Shopify/go-cache v0.0.0-20200326183119-49710f9722f8 h1:SKEHPPY5HhJovAUw5MxOC3bS+nqpXPB9GO4aIaY1aHQ=
 github.com/Shopify/go-cache v0.0.0-20200326183119-49710f9722f8/go.mod h1:EUBxWkCasqizTTLU7UCQU8LI2sQ0tOMX4WHnvUTPX5o=
 github.com/bitly/go-simplejson v0.5.0 h1:6IH+V8/tVMab511d5bn4M7EwGXZf9Hj6i2xSwkNEM+Y=
