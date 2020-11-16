@@ -142,7 +142,9 @@ func (m *Main) Kill(reason error) {
 					"deadline":      m.shutdownDeadline,
 					"mainComponent": componentName(component),
 				})
-				log(ctx, component.Tomb().Err()).Error("component took too long to shut down")
+				log(ctx, component.Tomb().Err()).
+					WithField("mainComponent", componentName(component)).
+					Error("component took too long to shut down")
 			}
 			return
 		}
@@ -155,7 +157,9 @@ func (m *Main) Kill(reason error) {
 					"deadline":      m.shutdownDeadline,
 					"mainComponent": componentName(component),
 				})
-				log(ctx, component.Tomb().Err()).Debug("component shutdown notification")
+				log(ctx, component.Tomb().Err()).
+					WithField("mainComponent", componentName(component)).
+					Debug("component shutdown notification")
 			} else {
 				alive[i] = component
 				i++
