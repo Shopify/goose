@@ -53,6 +53,12 @@ func ContextLog(ctx Valuer, err []error, entry *logrus.Entry) *logrus.Entry {
 				entry = entry.WithField(fmt.Sprintf("cause%d", i+1), errors.Cause(errX))
 			}
 		}
+
+		// Check last, to allow LogFields to overwrite this package's behaviour.
+		// Do not recurse in error causes, the error itself should merge its causes' fields if desired.
+		if logFields, ok := err0.(interface{ LogFields() logrus.Fields }); ok {
+			entry = entry.WithFields(logFields.LogFields())
+		}
 	}
 
 	return entry
