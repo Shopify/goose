@@ -29,6 +29,19 @@ func buildLogger() (Logger, *bytes.Buffer) {
 	return logger, buf
 }
 
+type logFieldsErr struct {
+	msg    string
+	fields logrus.Fields
+}
+
+func (e *logFieldsErr) LogFields() logrus.Fields {
+	return e.fields
+}
+
+func (e *logFieldsErr) Error() string {
+	return e.msg
+}
+
 func TestNew_OptionalErr(t *testing.T) {
 	origGlobal := logrus.Fields{}
 	for k, v := range GlobalFields {
@@ -46,6 +59,22 @@ func TestNew_OptionalErr(t *testing.T) {
 		assert.Equal(t, logrus.Fields{
 			"component": "foo",
 			"a":         "b",
+			"error":     err,
+		}, entry.Data)
+	})
+
+	t.Run("err with fields", func(t *testing.T) {
+		logger := New("foo")
+		ctx := context.Background()
+		err := &logFieldsErr{"bad stuff", logrus.Fields{"foo": "bar", "baz": "qux"}}
+
+		entry := logger(ctx, err).WithField("a", "b")
+
+		assert.Equal(t, logrus.Fields{
+			"component": "foo",
+			"a":         "b",
+			"foo":       "bar",
+			"baz":       "qux",
 			"error":     err,
 		}, entry.Data)
 	})
