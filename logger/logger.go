@@ -25,6 +25,11 @@ func New(name string) Logger {
 	}
 }
 
+type loggableError interface {
+	error
+	Loggable
+}
+
 func ContextLog(ctx Valuer, err []error, entry *logrus.Entry) *logrus.Entry {
 	if entry == nil {
 		entry = logrus.NewEntry(logrus.StandardLogger())
@@ -56,8 +61,9 @@ func ContextLog(ctx Valuer, err []error, entry *logrus.Entry) *logrus.Entry {
 
 		// Check last, to allow LogFields to overwrite this package's behaviour.
 		// Do not recurse in error causes, the error itself should merge its causes' fields if desired.
-		if logFields, ok := err0.(interface{ LogFields() logrus.Fields }); ok {
-			entry = entry.WithFields(logFields.LogFields())
+		var loggable loggableError
+		if errors.As(err0, &loggable) {
+			entry = entry.WithFields(loggable.LogFields())
 		}
 	}
 
