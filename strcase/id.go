@@ -6,16 +6,29 @@ import (
 	"unicode"
 )
 
+// ToPascalCase transforms a string in any form to PascalCase.
 func ToPascalCase(input string) string {
-	return splitJoin(input, 0, 0)
+	return splitJoin(input, 0, 0, false)
 }
 
+// ToPascalGoCase transforms a string in any form to PascalCase, but with recognized initialisms in uppercase, matching the Go style.
+func ToPascalGoCase(input string) string {
+	return splitJoin(input, 0, 0, true)
+}
+
+// ToCamelCase transforms a string in any form to camelCase.
 func ToCamelCase(input string) string {
-	return splitJoin(input, 1, 0)
+	return splitJoin(input, 1, 0, false)
 }
 
+// ToCamelGoCase transforms a string in any form to camelCase, but with recognized initialisms in uppercase, matching the Go style.
+func ToCamelGoCase(input string) string {
+	return splitJoin(input, 1, 0, true)
+}
+
+// ToSnakeCase transforms a string in any form to snake_case.
 func ToSnakeCase(input string) string {
-	return splitJoin(input, math.MaxInt64, '_')
+	return splitJoin(input, math.MaxInt64, '_', false)
 }
 
 func allocateBuilder(input string, separator rune) *strings.Builder {
@@ -35,7 +48,7 @@ func allocateBuilder(input string, separator rune) *strings.Builder {
 	return &b
 }
 
-func splitJoin(input string, firstUpper int, separator rune) string {
+func splitJoin(input string, firstUpper int, separator rune, initialism bool) string {
 	b := allocateBuilder(input, separator)
 	var buf []rune
 	var currentPartIndex int
@@ -51,7 +64,7 @@ func splitJoin(input string, firstUpper int, separator rune) string {
 			b.WriteRune(separator)
 		}
 		if currentPartIndex >= firstUpper {
-			pascalPart(buf)
+			pascalPart(buf, initialism)
 		}
 		for _, r := range buf {
 			b.WriteRune(r)
@@ -85,10 +98,10 @@ func splitJoin(input string, firstUpper int, separator rune) string {
 	return b.String()
 }
 
-// Convert to uppercase if initialism.
+// Convert to uppercase if initialism and `initialism` is true.
 // Convert first rune to uppercase otherwise.
-func pascalPart(part []rune) {
-	if isInitialism(part) {
+func pascalPart(part []rune, initialism bool) {
+	if initialism && isInitialism(part) {
 		for ri, r := range part {
 			part[ri] = unicode.ToUpper(r)
 		}

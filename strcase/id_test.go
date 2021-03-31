@@ -100,10 +100,12 @@ func Benchmark_category(b *testing.B) {
 
 func Test_splitJoin(t *testing.T) {
 	tests := []struct {
-		input  string
-		camel  string
-		pascal string
-		snake  string
+		input    string
+		camel    string
+		camelGo  string
+		pascal   string
+		pascalGo string
+		snake    string
 	}{
 		{
 			// everything empty
@@ -139,10 +141,12 @@ func Test_splitJoin(t *testing.T) {
 			snake:  "aa_bbb",
 		},
 		{
-			input:  "aa_id",
-			pascal: "AaID",
-			camel:  "aaID",
-			snake:  "aa_id",
+			input:    "aa_id",
+			pascal:   "AaId",
+			pascalGo: "AaID",
+			camel:    "aaId",
+			camelGo:  "aaID",
+			snake:    "aa_id",
 		},
 		{
 			input:  "fooBar",
@@ -157,28 +161,35 @@ func Test_splitJoin(t *testing.T) {
 			snake:  "foo_bar",
 		},
 		{
-			input:  "fooUrl",
-			pascal: "FooURL",
-			camel:  "fooURL",
-			snake:  "foo_url",
+			input:    "fooUrl",
+			pascal:   "FooUrl",
+			pascalGo: "FooURL",
+			camel:    "fooUrl",
+			camelGo:  "fooURL",
+			snake:    "foo_url",
 		},
 		{
-			input:  "fooURL",
-			pascal: "FooURL",
-			camel:  "fooURL",
-			snake:  "foo_url",
+			input:    "fooURL",
+			pascal:   "FooUrl",
+			pascalGo: "FooURL",
+			camel:    "fooUrl",
+			camelGo:  "fooURL",
+			snake:    "foo_url",
 		},
 		{
-			input:  "url10",
-			pascal: "URL10",
-			camel:  "url10",
-			snake:  "url_10",
+			input:    "url10",
+			pascal:   "Url10",
+			pascalGo: "URL10",
+			camel:    "url10",
+			snake:    "url_10",
 		},
 		{
-			input:  "url_id",
-			pascal: "URLID",
-			camel:  "urlID",
-			snake:  "url_id",
+			input:    "url_id",
+			pascal:   "UrlId",
+			pascalGo: "URLID",
+			camel:    "urlId",
+			camelGo:  "urlID",
+			snake:    "url_id",
 		},
 	}
 	for _, tt := range tests {
@@ -186,6 +197,16 @@ func Test_splitJoin(t *testing.T) {
 			require.Equal(t, tt.pascal, ToPascalCase(tt.input))
 			require.Equal(t, tt.camel, ToCamelCase(tt.input))
 			require.Equal(t, tt.snake, ToSnakeCase(tt.input))
+
+			if tt.pascalGo == "" {
+				tt.pascalGo = tt.pascal
+			}
+			require.Equal(t, tt.pascalGo, ToPascalGoCase(tt.input))
+
+			if tt.camelGo == "" {
+				tt.camelGo = tt.camel
+			}
+			require.Equal(t, tt.camelGo, ToCamelGoCase(tt.input))
 		})
 	}
 }
