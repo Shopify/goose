@@ -6,15 +6,12 @@ import (
 	"time"
 
 	"github.com/Shopify/go-cache/v2"
+	"github.com/Shopify/goose/logger"
+	"github.com/Shopify/goose/maintenance/cursor"
 	"github.com/Shopify/goose/statsd"
-
-	"github.com/Shopify/courier/pkg/errors"
-	"github.com/Shopify/courier/pkg/logging"
-	"github.com/Shopify/courier/pkg/maintenance/cursor"
-	"github.com/Shopify/courier/pkg/metrics"
 )
 
-var log = logging.PackageLogger()
+var log = logger.New("runner")
 
 type TaskRunner struct {
 	taskName          string
@@ -51,7 +48,7 @@ func (r *TaskRunner) Run(ctx context.Context) error {
 			return fmt.Errorf("failed to read cursor: %w", err)
 		}
 
-		metrics.TaskIterationProgress.Gauge(ctx, float64(index))
+		TaskIterationProgress.Gauge(ctx, float64(index))
 
 		log(ctx, nil).Infof("loading shops starting at %d", index)
 
@@ -61,11 +58,11 @@ func (r *TaskRunner) Run(ctx context.Context) error {
 		}
 		if len(iterables) == 0 {
 			log(ctx, nil).Infof("maintenance complete")
-			metrics.TaskIterations.Incr(ctx)
+			TaskIterations.Incr(ctx)
 
 			if r.restart {
 				if err = r.cursor.Set(ctx, 0); err != nil {
-					return errors.Wrap(err, "resetting cursor")
+					return err
 				}
 
 				select {
@@ -83,9 +80,9 @@ func (r *TaskRunner) Run(ctx context.Context) error {
 
 		batchStartTime := time.Now()
 		if err := r.executor.Perform(ctx, iterables); err != nil {
-			return errors.WrapCtx(ctx, err, "maintenance interrupted")
+			return err
 		}
-		metrics.TaskBatchExecution.Duration(ctx, time.Since(batchStartTime))
+		TaskBatchExecution.Duration(ctx, time.Since(batchStartTime))
 
 		index = int(nextIndex)
 

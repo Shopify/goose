@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"context"
 
-	"github.com/Shopify/courier/pkg/maintenance"
 	"github.com/Shopify/go-storage"
+	"github.com/Shopify/goose/maintenance"
 )
 
 type fileIterator struct {

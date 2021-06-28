@@ -2,14 +2,14 @@ package maintenance
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Shopify/courier/pkg/errors"
-	"github.com/Shopify/courier/pkg/maintenance/cursor"
+	"github.com/Shopify/goose/maintenance/cursor"
 )
 
 func TestTaskRunner_Restart(t *testing.T) {

@@ -2,18 +2,18 @@ package cursor
 
 import (
 	"context"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/Shopify/go-cache/v2"
 	"github.com/stretchr/testify/require"
-
-	"github.com/Shopify/courier/pkg/testutils"
 )
 
 func TestCursor(t *testing.T) {
 	ctx := context.Background()
 
-	cursorName := testutils.UniqueString("testcursor")
+	cursorName := fmt.Sprintf("testcursor-%d", time.Now().UnixNano())
 	c := NewCursor(cursorName, cache.NewMemoryClient())
 
 	index, err := c.Current(ctx)

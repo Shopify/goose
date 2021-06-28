@@ -2,11 +2,10 @@ package cursor
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Shopify/go-cache/v2"
-
-	"github.com/Shopify/courier/pkg/errors"
 )
 
 const cachePrefix = "task_cursors"

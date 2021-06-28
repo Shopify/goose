@@ -2,19 +2,21 @@ package maintenance
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-
-	"github.com/Shopify/courier/pkg/errors"
-	"github.com/Shopify/courier/pkg/models"
 )
+
+type testStruct struct {
+	int
+}
 
 func Test_SequentialExecutor(t *testing.T) {
 	ctx := context.Background()
 
-	it1, it2, it3 := int64(100), &models.Shop{ShopifyID: 2}, "str-id"
+	it1, it2, it3 := int64(100), testStruct{2}, "str-id"
 
 	task := &TaskMock{}
 	task.On("Perform", mock.Anything, it1).Once().Return(nil)

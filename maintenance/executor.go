@@ -5,10 +5,6 @@ import (
 	"time"
 
 	"github.com/Shopify/goose/logger"
-
-	"github.com/Shopify/courier/pkg/app/runtime"
-	"github.com/Shopify/courier/pkg/errors"
-	"github.com/Shopify/courier/pkg/metrics"
 )
 
 type Executor interface {
@@ -49,7 +45,7 @@ func (s *sequentialExecutor) Perform(ctx context.Context, its []interface{}) err
 
 		err = s.callTask(ctx, it)
 		if err != nil {
-			return errors.WrapCtx(ctx, err, "task failed")
+			return err
 		}
 	}
 
@@ -63,12 +59,12 @@ func (s *sequentialExecutor) callTask(ctx context.Context, it interface{}) (err 
 		ctx = logger.WithField(ctx, "task_index", it)
 	}
 
-	defer metrics.TaskExecution.StartTimer(ctx).SuccessFinish(&err)
+	defer TaskExecution.StartTimer(ctx).SuccessFinish(&err)
 
 	// Isolate the context to run the tasks:
 	// General cancellation will interrupt the runner between tasks, but should not randomly interrupt a task.
 	// However we still want a timeout on task execution.
-	taskCtx, cancel := context.WithTimeout(runtime.BackgroundContextWithValues(ctx), s.taskTimeout)
+	taskCtx, cancel := context.WithTimeout(BackgroundContextWithValues(ctx), s.taskTimeout)
 	defer cancel()
 
 	log(ctx, nil).Info("task running")
