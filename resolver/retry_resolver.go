@@ -25,19 +25,29 @@ func NewRetryResolver(resolver Resolver, backoffs []time.Duration) Resolver {
 	}
 }
 
-func (r *retryResolver) retry(ctx context.Context, fn func() error) (err error) {
+func shouldRetry(err error) bool {
+	if errors.Is(err, context.DeadlineExceeded) {
+		return true
+	}
+
 	var dnsError *net.DNSError
+	return errors.As(err, &dnsError) && dnsError.Temporary()
+}
+
+func (r *retryResolver) retry(ctx context.Context, fn func() error) (err error) {
 	err = fn()
 
-	for i := 0; i < len(r.backoffs) && errors.As(err, &dnsError) && dnsError.Temporary(); i++ {
+	for i := 0; i < len(r.backoffs) && shouldRetry(err); i++ {
 		select {
 		case <-ctx.Done():
+			// If the parent context is done, retrying wouldn't help, no need to check if it is a context.DeadlineExceeded.
 			return ctx.Err()
 		case <-time.After(r.backoffs[i]):
 			err = fn()
 		}
 	}
 
+	var dnsError *net.DNSError
 	if errors.As(err, &dnsError) && dnsError.Err == "server misbehaving" {
 		// Certain servers misbehave and will very likely continue to do so.
 		// If the query was attempted several times and still results in a SERVFAIL, consider it permanent.

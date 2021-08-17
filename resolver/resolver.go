@@ -4,9 +4,12 @@ import (
 	"context"
 	"errors"
 	"net"
+	"time"
 )
 
 var ErrNotFound = errors.New("host not found")
+
+var defaultTimeout = 2 * time.Second
 
 type Resolver interface {
 	LookupHost(ctx context.Context, host string) (addrs []string, err error)
@@ -22,7 +25,8 @@ type Resolver interface {
 
 func New() (r Resolver) {
 	r = NewNetResolver(nil)
-	r = NewRetryResolver(r, nil)
+	r = NewTimeoutResolver(r, defaultTimeout) // Timeout after 2 seconds, it is very likely to fail if it hasn't succeeded already.
+	r = NewRetryResolver(r, nil)              // Retry on errors, including timeouts
 	r = NewShuffleResolver(r)
 	return r
 }
