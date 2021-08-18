@@ -200,6 +200,14 @@ func TestNewRetryLookup(t *testing.T) {
 				})
 			})
 
+			t.Run("deadline exceeded", func(t *testing.T) {
+				withRetry(t, func(m *mockResolver, r Resolver) {
+					m.On(method, tt.callArgs...).Return(makeErrorArgs(len(tt.returnArgs), context.DeadlineExceeded)...).Times(3)
+					err := tt.call(ctx, t, r, false)
+					require.EqualError(t, err, "context deadline exceeded")
+				})
+			})
+
 			t.Run("success", func(t *testing.T) {
 				withRetry(t, func(m *mockResolver, r Resolver) {
 					m.On(method, tt.callArgs...).Return(makeErrorArgs(len(tt.returnArgs), temporaryError)...).Once()
