@@ -1,8 +1,10 @@
 package bugsnag
 
 import (
+	"flag"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"runtime"
 	"strings"
@@ -34,6 +36,24 @@ func init() {
 		panic("unable to determine project dir")
 	}
 	projectDir = path.Dir(path.Dir(file))
+}
+
+func TestMain(m *testing.M) {
+	if !flag.Parsed() {
+		flag.Parse()
+	}
+
+	// This test is incompatible with paniconexit0
+	panicFlag := flag.CommandLine.Lookup("test.paniconexit0")
+	if panicFlag != nil {
+		err := panicFlag.Value.Set("false")
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	code := m.Run()
+	os.Exit(code)
 }
 
 func TestSetup(t *testing.T) {
