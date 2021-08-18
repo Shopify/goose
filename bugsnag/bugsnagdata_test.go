@@ -1,7 +1,7 @@
 package bugsnag
 
 import (
-	bugsnaggo "github.com/bugsnag/bugsnag-go"
+	bugsnaggo "github.com/bugsnag/bugsnag-go/v2"
 )
 
 // bugsnagdata is the utility object which helps with writing bugsnag's unit tests
