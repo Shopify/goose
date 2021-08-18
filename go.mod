@@ -1,6 +1,6 @@
 module github.com/Shopify/goose
 
-go 1.13
+go 1.15
 
 require (
 	github.com/DataDog/datadog-go v3.4.0+incompatible
