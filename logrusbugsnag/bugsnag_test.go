@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/bugsnag/bugsnag-go"
+	"github.com/bugsnag/bugsnag-go/v2"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )

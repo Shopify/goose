@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	bugsnaggo "github.com/bugsnag/bugsnag-go"
+	bugsnaggo "github.com/bugsnag/bugsnag-go/v2"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"

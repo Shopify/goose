@@ -10,8 +10,8 @@ import (
 	"runtime/debug"
 	"strings"
 
-	bugsnaggo "github.com/bugsnag/bugsnag-go"
-	bugsnaggoErr "github.com/bugsnag/bugsnag-go/errors"
+	bugsnaggo "github.com/bugsnag/bugsnag-go/v2"
+	bugsnaggoErr "github.com/bugsnag/bugsnag-go/v2/errors"
 	"github.com/bugsnag/panicwrap"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
