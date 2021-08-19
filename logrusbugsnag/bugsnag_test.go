@@ -8,7 +8,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/bitly/go-simplejson"
 	"github.com/bugsnag/bugsnag-go"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -17,24 +16,14 @@ import (
 // Copied from bugsnag tests
 
 var roundTripper = &nilRoundTripper{}
-var postedJSON = make(chan []byte, 10)
+var events = make(chan *bugsnag.Event, 10)
 var testOnce sync.Once
 var testAPIKey = "166f5ad3590596f9aa8d601ea89af845"
 var errTest = errors.New("test error")
 
-type nilRoundTripper struct {
-	record bool
-}
+type nilRoundTripper struct{}
 
-func (rt *nilRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	if rt.record {
-		body, err := ioutil.ReadAll(req.Body)
-		if err != nil {
-			return nil, err
-		}
-		postedJSON <- body
-	}
-
+func (rt *nilRoundTripper) RoundTrip(_ *http.Request) (*http.Response, error) {
 	return &http.Response{
 		Body:       ioutil.NopCloser(bytes.NewReader(nil)),
 		StatusCode: http.StatusOK,
@@ -42,7 +31,6 @@ func (rt *nilRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) 
 }
 
 func setup(record bool) {
-	roundTripper.record = record
 	testOnce.Do(func() {
 		l := logrus.New()
 		l.Out = ioutil.Discard
@@ -56,6 +44,12 @@ func setup(record bool) {
 			Transport:   roundTripper,
 			Logger:      l,
 		})
+		if record {
+			bugsnag.OnBeforeNotify(func(event *bugsnag.Event, config *bugsnag.Configuration) error {
+				events <- event
+				return nil
+			})
+		}
 	})
 }
 
@@ -104,50 +98,42 @@ func TestNewBugsnagHook(t *testing.T) {
 	t.Run("inline error", func(t *testing.T) {
 		t.Run("inline logging", func(t *testing.T) {
 			l.WithError(err).Error(errors.New("foo"))
-			json, err := simplejson.NewJson(<-postedJSON)
-			assert.NoError(t, err)
 
-			exception := json.Get("events").GetIndex(0).Get("exceptions").GetIndex(0)
-			assert.Equal(t, "*errors.errorString", exception.Get("errorClass").MustString())
-			assert.Equal(t, "foo", exception.Get("message").MustString())
-			assert.NotEqual(t, "triggerError", exception.Get("stacktrace").GetIndex(0).Get("method").MustString())
-			assert.Contains(t, exception.Get("stacktrace").GetIndex(0).Get("file").MustString(), "bugsnag_test.go")
+			event := <-events
+			assert.Equal(t, "*errors.errorString", event.ErrorClass)
+			assert.Equal(t, "foo", event.Message)
+			assert.NotEqual(t, "triggerError", event.Stacktrace[0].Method)
+			assert.Contains(t, event.Stacktrace[0].File, "bugsnag_test.go")
 		})
 
 		t.Run("other function logging", func(t *testing.T) {
 			triggerError(l, errors.New("foo"))
-			json, err := simplejson.NewJson(<-postedJSON)
-			assert.NoError(t, err)
 
-			exception := json.Get("events").GetIndex(0).Get("exceptions").GetIndex(0)
-			assert.Equal(t, "*errors.errorString", exception.Get("errorClass").MustString())
-			assert.Equal(t, "foo", exception.Get("message").MustString())
-			assert.Equal(t, "triggerError", exception.Get("stacktrace").GetIndex(0).Get("method").MustString())
+			event := <-events
+			assert.Equal(t, "*errors.errorString", event.ErrorClass)
+			assert.Equal(t, "foo", event.Message)
+			assert.Equal(t, "triggerError", event.Stacktrace[0].Method)
 		})
 	})
 
 	t.Run("prebuilt error", func(t *testing.T) {
 		t.Run("inline logging", func(t *testing.T) {
 			l.WithError(errTest).Error("test")
-			json, err := simplejson.NewJson(<-postedJSON)
-			assert.NoError(t, err)
 
-			exception := json.Get("events").GetIndex(0).Get("exceptions").GetIndex(0)
-			assert.Equal(t, "*errors.errorString", exception.Get("errorClass").MustString())
-			assert.Equal(t, "test error", exception.Get("message").MustString())
-			assert.NotEqual(t, "triggerError", exception.Get("stacktrace").GetIndex(0).Get("method").MustString())
-			assert.Contains(t, exception.Get("stacktrace").GetIndex(0).Get("file").MustString(), "bugsnag_test.go")
+			event := <-events
+			assert.Equal(t, "*errors.errorString", event.ErrorClass)
+			assert.Equal(t, "test error", event.Message)
+			assert.NotEqual(t, "triggerError", event.Stacktrace[0].Method)
+			assert.Contains(t, event.Stacktrace[0].File, "bugsnag_test.go")
 		})
 
 		t.Run("other function logging", func(t *testing.T) {
 			triggerError(l, errTest)
-			json, err := simplejson.NewJson(<-postedJSON)
-			assert.NoError(t, err)
 
-			exception := json.Get("events").GetIndex(0).Get("exceptions").GetIndex(0)
-			assert.Equal(t, "*errors.errorString", exception.Get("errorClass").MustString())
-			assert.Equal(t, "test error", exception.Get("message").MustString())
-			assert.Equal(t, "triggerError", exception.Get("stacktrace").GetIndex(0).Get("method").MustString())
+			event := <-events
+			assert.Equal(t, "*errors.errorString", event.ErrorClass)
+			assert.Equal(t, "test error", event.Message)
+			assert.Equal(t, "triggerError", event.Stacktrace[0].Method)
 		})
 	})
 }
