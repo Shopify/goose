@@ -6,49 +6,43 @@ import (
 	"unicode"
 )
 
+type CaseStrategy int
+
+const (
+	CaseStrategyTitle         CaseStrategy = 0
+	CaseStrategySkipFirstPart CaseStrategy = 1
+	CaseStrategyNever         CaseStrategy = math.MaxInt64
+
+	NoSeparator rune = 0
+)
+
 // ToPascalCase transforms a string in any form to PascalCase.
 func ToPascalCase(input string) string {
-	return splitJoin(input, 0, 0, false)
+	return SplitJoin(input, CaseStrategyTitle, NoSeparator, false)
 }
 
 // ToPascalGoCase transforms a string in any form to PascalCase, but with recognized initialisms in uppercase, matching the Go style.
 func ToPascalGoCase(input string) string {
-	return splitJoin(input, 0, 0, true)
+	return SplitJoin(input, CaseStrategyTitle, NoSeparator, true)
 }
 
 // ToCamelCase transforms a string in any form to camelCase.
 func ToCamelCase(input string) string {
-	return splitJoin(input, 1, 0, false)
+	return SplitJoin(input, CaseStrategySkipFirstPart, NoSeparator, false)
 }
 
 // ToCamelGoCase transforms a string in any form to camelCase, but with recognized initialisms in uppercase, matching the Go style.
 func ToCamelGoCase(input string) string {
-	return splitJoin(input, 1, 0, true)
+	return SplitJoin(input, CaseStrategySkipFirstPart, NoSeparator, true)
 }
 
 // ToSnakeCase transforms a string in any form to snake_case.
 func ToSnakeCase(input string) string {
-	return splitJoin(input, math.MaxInt64, '_', false)
+	return SplitJoin(input, CaseStrategyNever, '_', false)
 }
 
-func allocateBuilder(input string, separator rune) *strings.Builder {
-	var b strings.Builder
-	length := len(input)
-	if separator != 0 {
-		// Heuristic to add about 25% buffer for separators
-		// Not having perfect match isn't terrible, it will only result in a few more memory allocations.
-		// Ex:
-		//   foo_bar_baz: 9 original chars, 11 final. 9 * 5 / 4 = 11
-		//   foo_id: 5 original chars, 6 final. 5 * 5 / 4 = 6
-		//   a_b_c_d: 4 original chars, 7 final. 4 * 5 / 4 = 5, which will result in an extra allocation.
-		length = length * 5 / 4
-	}
-
-	b.Grow(length)
-	return &b
-}
-
-func splitJoin(input string, firstUpper int, separator rune, initialism bool) string {
+func SplitJoin(input string, caseStrategy CaseStrategy, separator rune, initialism bool) string {
+	firstUpper := int(caseStrategy)
 	b := allocateBuilder(input, separator)
 	var buf []rune
 	var currentPartIndex int
@@ -60,7 +54,7 @@ func splitJoin(input string, firstUpper int, separator rune, initialism bool) st
 			// Nothing was added since last flush
 			return
 		}
-		if separator != 0 && currentPartIndex > 0 {
+		if separator != NoSeparator && currentPartIndex > 0 {
 			b.WriteRune(separator)
 		}
 		if currentPartIndex >= firstUpper {
@@ -96,6 +90,23 @@ func splitJoin(input string, firstUpper int, separator rune, initialism bool) st
 	flush()
 
 	return b.String()
+}
+
+func allocateBuilder(input string, separator rune) *strings.Builder {
+	var b strings.Builder
+	length := len(input)
+	if separator != NoSeparator {
+		// Heuristic to add about 25% buffer for separators
+		// Not having perfect match isn't terrible, it will only result in a few more memory allocations.
+		// Ex:
+		//   foo_bar_baz: 9 original chars, 11 final. 9 * 5 / 4 = 11
+		//   foo_id: 5 original chars, 6 final. 5 * 5 / 4 = 6
+		//   a_b_c_d: 4 original chars, 7 final. 4 * 5 / 4 = 5, which will result in an extra allocation.
+		length = length * 5 / 4
+	}
+
+	b.Grow(length)
+	return &b
 }
 
 // Convert to uppercase if initialism and `initialism` is true.
