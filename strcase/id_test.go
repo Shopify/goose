@@ -106,6 +106,7 @@ func Test_splitJoin(t *testing.T) {
 		pascal   string
 		pascalGo string
 		snake    string
+		header   string
 	}{
 		{
 			// everything empty
@@ -115,30 +116,35 @@ func Test_splitJoin(t *testing.T) {
 			pascal: "A",
 			camel:  "a",
 			snake:  "a",
+			header: "A",
 		},
 		{
 			input:  "A",
 			pascal: "A",
 			camel:  "a",
 			snake:  "a",
+			header: "A",
 		},
 		{
 			input:  "a_a",
 			pascal: "AA",
 			camel:  "aA",
 			snake:  "a_a",
+			header: "A-A",
 		},
 		{
 			input:  "__a___a_",
 			pascal: "AA",
 			camel:  "aA",
 			snake:  "a_a",
+			header: "A-A",
 		},
 		{
 			input:  "aa_bbb",
 			pascal: "AaBbb",
 			camel:  "aaBbb",
 			snake:  "aa_bbb",
+			header: "Aa-Bbb",
 		},
 		{
 			input:    "aa_id",
@@ -147,18 +153,21 @@ func Test_splitJoin(t *testing.T) {
 			camel:    "aaId",
 			camelGo:  "aaID",
 			snake:    "aa_id",
+			header:   "Aa-ID",
 		},
 		{
 			input:  "fooBar",
 			pascal: "FooBar",
 			camel:  "fooBar",
 			snake:  "foo_bar",
+			header: "Foo-Bar",
 		},
 		{
 			input:  "FooBAR",
 			pascal: "FooBar",
 			camel:  "fooBar",
 			snake:  "foo_bar",
+			header: "Foo-Bar",
 		},
 		{
 			input:    "fooUrl",
@@ -167,6 +176,7 @@ func Test_splitJoin(t *testing.T) {
 			camel:    "fooUrl",
 			camelGo:  "fooURL",
 			snake:    "foo_url",
+			header:   "Foo-URL",
 		},
 		{
 			input:    "fooURL",
@@ -175,6 +185,7 @@ func Test_splitJoin(t *testing.T) {
 			camel:    "fooUrl",
 			camelGo:  "fooURL",
 			snake:    "foo_url",
+			header:   "Foo-URL",
 		},
 		{
 			input:    "url10",
@@ -182,6 +193,7 @@ func Test_splitJoin(t *testing.T) {
 			pascalGo: "URL10",
 			camel:    "url10",
 			snake:    "url_10",
+			header:   "URL-10",
 		},
 		{
 			input:    "url_id",
@@ -190,23 +202,40 @@ func Test_splitJoin(t *testing.T) {
 			camel:    "urlId",
 			camelGo:  "urlID",
 			snake:    "url_id",
+			header:   "URL-ID",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			require.Equal(t, tt.pascal, ToPascalCase(tt.input))
-			require.Equal(t, tt.camel, ToCamelCase(tt.input))
-			require.Equal(t, tt.snake, ToSnakeCase(tt.input))
+			t.Run("ToPascalCase", func(t *testing.T) {
+				require.Equal(t, tt.pascal, ToPascalCase(tt.input))
+			})
 
-			if tt.pascalGo == "" {
-				tt.pascalGo = tt.pascal
-			}
-			require.Equal(t, tt.pascalGo, ToPascalGoCase(tt.input))
+			t.Run("ToCamelCase", func(t *testing.T) {
+				require.Equal(t, tt.camel, ToCamelCase(tt.input))
+			})
 
-			if tt.camelGo == "" {
-				tt.camelGo = tt.camel
-			}
-			require.Equal(t, tt.camelGo, ToCamelGoCase(tt.input))
+			t.Run("ToSnakeCase", func(t *testing.T) {
+				require.Equal(t, tt.snake, ToSnakeCase(tt.input))
+			})
+
+			t.Run("ToPascalGoCase", func(t *testing.T) {
+				if tt.pascalGo == "" {
+					tt.pascalGo = tt.pascal
+				}
+				require.Equal(t, tt.pascalGo, ToPascalGoCase(tt.input))
+			})
+
+			t.Run("ToCamelGoCase", func(t *testing.T) {
+				if tt.camelGo == "" {
+					tt.camelGo = tt.camel
+				}
+				require.Equal(t, tt.camelGo, ToCamelGoCase(tt.input))
+			})
+
+			t.Run("ToHeaderField", func(t *testing.T) {
+				require.Equal(t, tt.header, ToHeaderField(tt.input))
+			})
 		})
 	}
 }

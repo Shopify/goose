@@ -41,6 +41,11 @@ func ToSnakeCase(input string) string {
 	return SplitJoin(input, CaseStrategyNever, '_', false)
 }
 
+// ToHeaderField transforms a string in any form to An-HTTP-Header.
+func ToHeaderField(input string) string {
+	return SplitJoin(input, CaseStrategyTitle, '-', true)
+}
+
 func SplitJoin(input string, caseStrategy CaseStrategy, separator rune, initialism bool) string {
 	firstUpper := int(caseStrategy)
 	b := allocateBuilder(input, separator)
