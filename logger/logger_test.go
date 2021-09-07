@@ -66,7 +66,8 @@ func TestNew_OptionalErr(t *testing.T) {
 	t.Run("err with fields", func(t *testing.T) {
 		logger := New("foo")
 		ctx := context.Background()
-		err := &logFieldsErr{"bad stuff", logrus.Fields{"foo": "bar", "baz": "qux"}}
+		cause := &logFieldsErr{"bad stuff", logrus.Fields{"foo": "bar", "baz": "qux"}}
+		err := errors.Wrap(cause, "cause")
 
 		entry := logger(ctx, err).WithField("a", "b")
 
@@ -76,6 +77,7 @@ func TestNew_OptionalErr(t *testing.T) {
 			"foo":       "bar",
 			"baz":       "qux",
 			"error":     err,
+			"cause":     cause,
 		}, entry.Data)
 	})
 
