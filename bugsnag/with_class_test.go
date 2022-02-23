@@ -32,7 +32,6 @@ func TestFormatErrorClass(t *testing.T) {
 	require.Contains(t, formatted, "testing.tRunner")
 	require.Contains(t, formatted, "src/testing/testing.go")
 	require.Contains(t, formatted, "runtime.goexit")
-	require.Contains(t, formatted, "src/runtime/asm_amd64.s")
 }
 
 func TestWrapf(t *testing.T) {

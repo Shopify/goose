@@ -12,9 +12,11 @@ import (
 // namespace is a global namespace to apply to every metric emitted.
 // tags is a global set of tags that will be added to every metric emitted.
 func NewLogBackend(namespace string, tags []string) Backend {
+	defaultTags := append(defaultTagsFromEnv(), tags...)
+
 	lb := &logBackend{
 		namespace: namespace,
-		tags:      tags,
+		tags:      defaultTags,
 	}
 	return NewForwardingBackend(lb.log)
 }
