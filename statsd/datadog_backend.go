@@ -14,13 +14,15 @@ import (
 // It should end with a period to separate it from the metric name.
 //
 // `tags` is a set of tags that will be included with every metric submitted.
+// STATSD_DEFAULT_TAGS env variable will be read automatically and added to default tags.
 func NewDatadogBackend(endpoint, namespace string, tags []string) (Backend, error) {
 	client, err := statsd.New(endpoint)
 	if err != nil {
 		return nil, err
 	}
 	client.Namespace = namespace
-	client.Tags = tags
+	defaultTags := append(defaultTagsFromEnv(), tags...)
+	client.Tags = defaultTags
 	return &datadogBackend{
 		client: client,
 	}, nil

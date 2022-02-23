@@ -47,6 +47,7 @@ func SetBackend(b Backend) {
 var ErrUnknownBackend = fmt.Errorf("unknown statsd backend type")
 
 // NewBackend returns the appropriate Backend for the given implementation and host.
+// STATSD_DEFAULT_TAGS env variable will be read automatically and added to default tags.
 func NewBackend(impl, addr, prefix string, tags ...string) (Backend, error) {
 	var err error
 	var b Backend
