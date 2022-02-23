@@ -5,14 +5,15 @@ import (
 	"strings"
 )
 
-const StatsdDefaultTags = "STATSD_DEFAULT_TAGS"
+const (
+	StatsdDefaultTags = "STATSD_DEFAULT_TAGS"
+	DefaultSep        = ","
+)
 
 func defaultTagsFromEnv() []string {
 	statsdTags, found := os.LookupEnv(StatsdDefaultTags)
 	if !found || statsdTags == "" {
 		return nil
 	}
-
-	const defaultSep = ","
-	return strings.Split(statsdTags, defaultSep)
+	return strings.Split(statsdTags, DefaultSep)
 }

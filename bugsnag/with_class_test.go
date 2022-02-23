@@ -26,7 +26,6 @@ func TestWrappedWithErrorClass(t *testing.T) {
 func TestFormatErrorClass(t *testing.T) {
 	err := WithErrorClass(errors.New("test error"), "FOO")
 	formatted := fmt.Sprintf("%+v", err)
-	fmt.Println(formatted)
 	require.Contains(t, formatted, "FOO: test error")
 	require.Contains(t, formatted, "github.com/Shopify/goose/bugsnag.TestFormatErrorClass")
 	require.Contains(t, formatted, projectDir+"/bugsnag/with_class_test.go")
