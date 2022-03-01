@@ -1,6 +1,6 @@
 module github.com/Shopify/goose
 
-go 1.15
+go 1.17
 
 require (
 	github.com/DataDog/datadog-go v4.8.1+incompatible
@@ -25,4 +25,11 @@ require (
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+)
+
+require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/gofrs/uuid v4.0.0+incompatible // indirect
+	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 )
