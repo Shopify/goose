@@ -55,3 +55,7 @@ func (b *datadogBackend) Set(ctx context.Context, name string, value string, tag
 func (b *datadogBackend) Timing(ctx context.Context, name string, value time.Duration, tags []string, rate float64) error {
 	return b.client.Timing(name, value, tags, rate)
 }
+
+func (b *datadogBackend) Flush() error {
+	return b.client.Flush()
+}
