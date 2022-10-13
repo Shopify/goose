@@ -97,9 +97,10 @@ func RequestContextMiddleware(next http.Handler) http.Handler {
 
 // replaceMatchableParts replaces mux templates "/{name:[a-z]+}" with "/hello/@name" to be tag-friendly
 // Works with:
-//   /{name}
-//   /{name:[a-z]+}
-//   /{name:(?:[a-z]{2}){2}}
+//
+//	/{name}
+//	/{name:[a-z]+}
+//	/{name:(?:[a-z]{2}){2}}
 func replaceMatchableParts(tpl string) (string, error) {
 	const (
 		modePath = iota
