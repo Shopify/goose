@@ -2,9 +2,10 @@
 Package bugsnag provides a simple wrapper over the bugsnag/bugsnag-go lib that maintains
 the same Notify(err, rawData...) API but with improved setup and error decoration.
 
-Usage
+# Usage
 
 The client should only need to use the static/package level APIs defined in bugsnag.go
+
 	func main(){
 		bugsnag.Setup("apiKey", "SHA", "env", []string{"github.com/Shopify/yourClientRepo"})
 		defer bugsnag.AutoNotify()
@@ -18,7 +19,7 @@ The client should only need to use the static/package level APIs defined in bugs
 		bugsnag.Notify(err, rawData...)
 	}
 
-Features
+# Features
 
 Smart handling of errors passed to notify populating the "Error" tab in bugsnag. If the error is wrapped using pkg/errors then its stacktrace
 and context messages are extracted correctly.
@@ -35,6 +36,7 @@ Project packages are handled correctly which helps with proper grouping of bugs 
 The default panic handler is fixed so that panics are not dropped in containerized environments.
 
 Create custom bugsnag tabs easily by implementing the TabWriter interface or Tab objects passed in as rawData. e.g.:
+
 	type customTab struct {
 		val string
 	}
@@ -47,6 +49,5 @@ Create custom bugsnag tabs easily by implementing the TabWriter interface or Tab
 	}
 
 	bugsnag.Notify(err, &customTab{"value"})
-
 */
 package bugsnag

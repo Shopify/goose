@@ -62,15 +62,15 @@ func (t *timerFinisher) SuccessFinish(errp *error) {
 //
 // Examples:
 //
-//     func foo()  {
-//       defer t.StartTimer().Finish()
-//       // ...
-//     }
+//	func foo()  {
+//	  defer t.StartTimer().Finish()
+//	  // ...
+//	}
 //
-//     func foo() (err error)  {
-//       defer t.StartTimer().SuccessFinish(&err)
-//       // ...
-//     }
+//	func foo() (err error)  {
+//	  defer t.StartTimer().SuccessFinish(&err)
+//	  // ...
+//	}
 func (t *Timer) StartTimer(ctx context.Context, ts ...Tags) Finisher {
 	return &timerFinisher{
 		timer:     t,

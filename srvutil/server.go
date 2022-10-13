@@ -26,7 +26,7 @@ type Server interface {
 
 func NewServer(t *tomb.Tomb, bind string, servlet Servlet) Server {
 	return NewServerFromFactory(t, servlet, func(handler http.Handler) http.Server {
-		return http.Server{
+		return http.Server{ //nolint:gosec
 			Addr:    bind,
 			Handler: handler,
 		}
@@ -126,7 +126,7 @@ func (ln stoppableKeepaliveListener) Accept() (net.Conn, error) {
 			netErr, ok := err.(net.Error)
 
 			// If this is a timeout, then continue to wait for new connections
-			if ok && netErr.Timeout() && netErr.Temporary() {
+			if ok && netErr.Timeout() && netErr.Temporary() { //nolint:staticcheck
 				continue
 			} else {
 				return nil, err
