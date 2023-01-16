@@ -34,8 +34,9 @@ func (t *Timer) Time(ctx context.Context, fn func() error, ts ...Tags) error {
 }
 
 type Finisher interface {
-	Finish()
-	SuccessFinish(err *error)
+	Finish(ts ...Tags)
+	SuccessFinish(err *error, ts ...Tags)
+	SetTags(ts ...Tags)
 }
 
 type timerFinisher struct {
@@ -45,16 +46,23 @@ type timerFinisher struct {
 	ctx       context.Context
 }
 
-func (t *timerFinisher) Finish() {
-	t.timer.Duration(t.ctx, time.Since(t.startTime), t.tags...)
+func (t *timerFinisher) Finish(ts ...Tags) {
+	tags := append([]Tags{}, t.tags...)
+	tags = append(tags, ts...)
+	t.timer.Duration(t.ctx, time.Since(t.startTime), tags...)
 }
 
-func (t *timerFinisher) SuccessFinish(errp *error) {
-	tags := append([]Tags{}, t.tags...) // Copy the slice
+func (t *timerFinisher) SuccessFinish(errp *error, ts ...Tags) {
+	tags := append([]Tags{}, t.tags...)
+	tags = append(tags, ts...)
 	if errp != nil {
 		tags = append(tags, Tags{"success": *errp == nil})
 	}
 	t.timer.Duration(t.ctx, time.Since(t.startTime), tags...)
+}
+
+func (t *timerFinisher) SetTags(ts ...Tags) {
+	t.tags = append(t.tags, ts...)
 }
 
 // StartTimer provides a way to collect a duration metric for a function call
