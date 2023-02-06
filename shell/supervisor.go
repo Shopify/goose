@@ -10,7 +10,11 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Shopify/goose/v2/logger"
-	"github.com/Shopify/goose/v2/metrics"
+	"github.com/Shopify/goose/v2/statsd"
+)
+
+var (
+	metricCommandRun = &statsd.Timer{Name: "shell.command.run"}
 )
 
 type Supervisor interface {
@@ -52,7 +56,7 @@ func (w *wrapper) RunAndGetOutput() ([]byte, []byte, error) {
 }
 
 func (w *wrapper) Wait() (err error) {
-	defer metrics.ShellCommandRun.StartTimer(w.ctx).SuccessFinish(&err)
+	defer metricCommandRun.StartTimer(w.ctx).SuccessFinish(&err)
 
 	cmd := w.cmd
 

@@ -15,7 +15,6 @@ import (
 	"gopkg.in/tomb.v2"
 
 	"github.com/Shopify/goose/v2/logger"
-	"github.com/Shopify/goose/v2/metrics"
 	"github.com/Shopify/goose/v2/safely"
 	"github.com/Shopify/goose/v2/statsd"
 )
@@ -32,6 +31,9 @@ var (
 	// ErrShutdownRequested can be used as a reason for `Kill` that indicates no
 	// error has occurred, just that the components should gracefully exit.
 	ErrShutdownRequested = errors.New("shutdown requested")
+
+	metricRun      = &statsd.Timer{Name: "genmain.run"}
+	metricShutdown = &statsd.Timer{Name: "genmain.shutdown"}
 )
 
 // Main represents a collection of components whose lifecycles are tied together.
@@ -137,7 +139,7 @@ func (m *Main) Kill(reason error) {
 
 		if !waitAny(killed, deadline) {
 			for _, component := range alive {
-				metrics.GenMainShutdown.Duration(ctx, time.Since(shutdownStart), statsd.Tags{
+				metricShutdown.Duration(ctx, time.Since(shutdownStart), statsd.Tags{
 					"success":       false,
 					"deadline":      m.shutdownDeadline,
 					"mainComponent": componentName(component),
@@ -152,7 +154,7 @@ func (m *Main) Kill(reason error) {
 		i := 0
 		for _, component := range alive {
 			if isDead(component.Tomb()) {
-				metrics.GenMainShutdown.Duration(ctx, time.Since(shutdownStart), statsd.Tags{
+				metricShutdown.Duration(ctx, time.Since(shutdownStart), statsd.Tags{
 					"success":       true,
 					"deadline":      m.shutdownDeadline,
 					"mainComponent": componentName(component),
@@ -180,7 +182,7 @@ func (m *Main) SetShutdownDeadline(d time.Duration) {
 // if called more than once.
 func (m *Main) RunAndWait() error {
 	ctx := context.Background()
-	defer metrics.GenMainRun.StartTimer(ctx).Finish()
+	defer metricRun.StartTimer(ctx).Finish()
 
 	m.l.Lock()
 	if m.ran {

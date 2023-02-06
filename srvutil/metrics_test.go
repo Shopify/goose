@@ -17,7 +17,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/tomb.v2"
 
-	"github.com/Shopify/goose/v2/metrics"
 	"github.com/Shopify/goose/v2/safely"
 	"github.com/Shopify/goose/v2/statsd"
 )
@@ -25,7 +24,7 @@ import (
 func TestRequestMetricsMiddleware(t *testing.T) {
 	var recordedTags []string
 	statsd.SetBackend(statsd.NewForwardingBackend(func(_ context.Context, mType string, name string, value interface{}, tags []string, _ float64) error {
-		if name == metrics.HTTPRequest.Name {
+		if name == metricHTTPRequest.Name {
 			recordedTags = tags
 		}
 		return nil
@@ -74,7 +73,7 @@ func TestRequestMetricsMiddleware(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "hello world", string(body))
 
-	assert.NotNil(t, recordedTags, "should have recorded a %s tag", metrics.HTTPRequest.Name)
+	assert.NotNil(t, recordedTags, "should have recorded a %s tag", metricHTTPRequest.Name)
 	assert.Equal(t, []string{"route:/hello/@name", "statusClass:2xx", "statusCode:200"}, recordedTags)
 
 	output := strings.ToLower(logging.String())
