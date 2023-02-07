@@ -15,12 +15,12 @@ import (
 func TestBuildContext(t *testing.T) {
 	r := newTestRequest("/path")
 	ctx, id := BuildContext(r)
-	entry := logger.ContextLog(ctx, nil, nil)
+	fields := logger.GetLoggableValues(ctx)
 
 	assert.NotEmpty(t, id)
-	assert.Equal(t, id, entry.Data[logger.UUIDKey])
-	assert.Equal(t, "/path", entry.Data[PathKey])
-	assert.Nil(t, entry.Data[RouteKey]) // No route info
+	assert.Equal(t, id, fields[logger.UUIDKey])
+	assert.Equal(t, "/path", fields[PathKey])
+	assert.Nil(t, fields[RouteKey]) // No route info
 }
 
 func TestRequestContextMiddleware(t *testing.T) {

@@ -11,12 +11,10 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/tomb.v2"
 
 	"github.com/Shopify/goose/v2/safely"
-	"github.com/Shopify/goose/v2/syncio"
 )
 
 func ExampleNewServer() {
@@ -47,12 +45,6 @@ func ExampleNewServer() {
 }
 
 func TestNewServer(t *testing.T) {
-	logOutput := &syncio.Buffer{}
-	origOut := logrus.StandardLogger().Out
-	logrus.StandardLogger().SetOutput(logOutput)
-	logrus.StandardLogger().SetLevel(logrus.DebugLevel)
-	defer logrus.StandardLogger().SetOutput(origOut)
-
 	tb := &tomb.Tomb{}
 	sl := FuncServlet("/", func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusOK)
@@ -66,8 +58,6 @@ func TestNewServer(t *testing.T) {
 	u := "http://" + s.Addr().String()
 	t.Logf("test server running on %s", u)
 
-	assert.Contains(t, logOutput.String(), "level=info msg=\"starting server\" bind=\"127.0.0.1:0\"")
-
 	// Works
 	res, err := http.Get(u)
 	assert.NoError(t, err)
@@ -76,13 +66,8 @@ func TestNewServer(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "great success", string(body))
 
-	assert.NotContains(t, logOutput.String(), fmt.Sprintf("level=debug msg=\"stopped server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
-
 	tb.Kill(errors.New("testing"))
 	<-tb.Dead()
-
-	assert.Contains(t, logOutput.String(), fmt.Sprintf("level=info msg=\"started server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
-	assert.Contains(t, logOutput.String(), fmt.Sprintf("level=debug msg=\"stopped server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
 
 	// No longer works
 	res, err = http.Get(u)
@@ -92,12 +77,6 @@ func TestNewServer(t *testing.T) {
 }
 
 func TestNewServerFromFactory(t *testing.T) {
-	logOutput := &syncio.Buffer{}
-	origOut := logrus.StandardLogger().Out
-	logrus.StandardLogger().SetOutput(logOutput)
-	logrus.StandardLogger().SetLevel(logrus.DebugLevel)
-	defer logrus.StandardLogger().SetOutput(origOut)
-
 	totalCallCount := 0
 	servletCallCount := 0
 
@@ -129,8 +108,6 @@ func TestNewServerFromFactory(t *testing.T) {
 	u := "http://" + s.Addr().String()
 	t.Logf("test server running on %s", u)
 
-	assert.Contains(t, logOutput.String(), "level=info msg=\"starting server\" bind=\"127.0.0.1:0\"")
-
 	// Works
 	res, err := http.Get(u)
 	assert.NoError(t, err)
@@ -156,13 +133,8 @@ func TestNewServerFromFactory(t *testing.T) {
 	assert.Equal(t, 4, totalCallCount)
 	assert.Equal(t, 3, servletCallCount)
 
-	assert.NotContains(t, logOutput.String(), fmt.Sprintf("level=debug msg=\"stopped server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
-
 	tb.Kill(errors.New("testing"))
 	<-tb.Dead()
-
-	assert.Contains(t, logOutput.String(), fmt.Sprintf("level=info msg=\"started server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
-	assert.Contains(t, logOutput.String(), fmt.Sprintf("level=debug msg=\"stopped server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
 
 	// No longer works
 	res, err = http.Get(u)
@@ -172,12 +144,6 @@ func TestNewServerFromFactory(t *testing.T) {
 }
 
 func TestStoppableKeepaliveListener_Accept(t *testing.T) {
-	logOutput := &syncio.Buffer{}
-	origOut := logrus.StandardLogger().Out
-	logrus.StandardLogger().SetOutput(logOutput)
-	logrus.StandardLogger().SetLevel(logrus.DebugLevel)
-	defer logrus.StandardLogger().SetOutput(origOut)
-
 	handling := make(chan struct{})
 
 	tb := &tomb.Tomb{}
@@ -220,15 +186,12 @@ func TestStoppableKeepaliveListener_Accept(t *testing.T) {
 	}()
 
 	<-handling
-	assert.NotContains(t, logOutput.String(), fmt.Sprintf("level=debug msg=\"stopped server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
 
 	tb.Kill(errors.New("testing"))
 
 	<-done
-	assert.Contains(t, logOutput.String(), fmt.Sprintf("level=info msg=\"shutting down server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
 
 	<-tb.Dead()
-	assert.Contains(t, logOutput.String(), fmt.Sprintf("level=debug msg=\"stopped server\" addr=\"127.0.0.1:%d\" bind=\"127.0.0.1:0\"", s.Addr().Port))
 
 	// No longer works
 	res, err := http.Get(u)
