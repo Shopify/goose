@@ -22,7 +22,7 @@ func buildLogger() (Logger, *bytes.Buffer) {
 	}
 	entry := logrus.NewEntry(logrusLogger)
 
-	logger := func(ctx Valuer, err ...error) *logrus.Entry {
+	logger := func(ctx context.Context, err ...error) *logrus.Entry {
 		return ContextLog(ctx, err, entry)
 	}
 

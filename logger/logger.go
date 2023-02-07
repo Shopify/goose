@@ -14,10 +14,10 @@ type causer interface {
 
 var GlobalFields = logrus.Fields{}
 
-type Logger func(Valuer, ...error) *logrus.Entry
+type Logger func(context.Context, ...error) *logrus.Entry
 
 func New(name string) Logger {
-	return func(ctx Valuer, err ...error) *logrus.Entry {
+	return func(ctx context.Context, err ...error) *logrus.Entry {
 		if len(err) == 1 && err[0] == nil {
 			err = nil
 		}
@@ -30,7 +30,7 @@ type loggableError interface {
 	Loggable
 }
 
-func ContextLog(ctx Valuer, err []error, entry *logrus.Entry) *logrus.Entry {
+func ContextLog(ctx context.Context, err []error, entry *logrus.Entry) *logrus.Entry {
 	if entry == nil {
 		entry = logrus.NewEntry(logrus.StandardLogger())
 	}
@@ -38,9 +38,7 @@ func ContextLog(ctx Valuer, err []error, entry *logrus.Entry) *logrus.Entry {
 
 	if ctx != nil {
 		entry = entry.WithFields(GetLoggableValues(ctx))
-		if ctx, ok := ctx.(context.Context); ok {
-			entry = entry.WithContext(ctx)
-		}
+		entry = entry.WithContext(ctx)
 	}
 
 	if len(err) != 0 {
