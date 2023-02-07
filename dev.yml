@@ -11,7 +11,7 @@ commands:
     godoc -http=:6060
   test: go test -race ./...
   style:
-    run: bin/style
-    desc: Static verification using gometalinter or autofix issues when possible.
+    run: bin/style run
+    desc: Static verification using golangci or autofix issues when possible.
     syntax:
       optional: --fix

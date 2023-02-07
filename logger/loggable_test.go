@@ -64,7 +64,7 @@ func ExampleWatchingLoggable() {
 func TestEmptyContext(t *testing.T) {
 	ctx := context.Background()
 	// Using a basic type on purpose, disable linter
-	ctx = context.WithValue(ctx, "a", "b") //nolint:golint,staticcheck
+	ctx = context.WithValue(ctx, "a", "b") //nolint:revive,staticcheck
 	// Not showing up in logs
 	checkData(ctx, t, logrus.Fields{"component": "testing"})
 }
@@ -113,19 +113,6 @@ func TestWithField(t *testing.T) {
 	checkData(ctx, t, logrus.Fields{
 		"a": "b",
 		"c": "e",
-	})
-}
-
-func TestLoggableKeyClash(t *testing.T) {
-	ctx := context.Background()
-	ctx = WithField(ctx, "a", "b")
-
-	// logFieldsKey is an int declared as a contextKey, so trying to set an int shouldn't override the contextKey
-	// Using a basic type on purpose, disable linter
-	ctx = context.WithValue(ctx, int(logFieldsKey), "foo") //nolint:golint,staticcheck
-
-	checkData(ctx, t, logrus.Fields{
-		"a": "b",
 	})
 }
 

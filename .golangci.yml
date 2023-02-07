@@ -19,15 +19,14 @@ linters:
     - gocritic
     - gofmt
     - goimports
-    - golint
     - gosec
     - govet
     - lll
-    - maligned
     - megacheck
     - misspell
     - nakedret
     - prealloc
+    - revive
     - stylecheck
     - unconvert
     - unparam

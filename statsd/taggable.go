@@ -9,10 +9,10 @@ import (
 )
 
 // This create a private key-space in the Context, meaning that only this package can get or set "contextKey" types
-type contextKey int
+type contextKey struct{}
 
-const (
-	tagsKey contextKey = iota
+var (
+	tagsKey = contextKey{}
 )
 
 type Tags map[string]interface{}

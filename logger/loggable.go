@@ -7,10 +7,10 @@ import (
 )
 
 // This create a private key-space in the Context, meaning that only this package can get or set "contextKey" types
-type contextKey int
+type contextKey struct{}
 
-const (
-	logFieldsKey contextKey = iota
+var (
+	logFieldsKey = contextKey{}
 )
 
 type Loggable interface {

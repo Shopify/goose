@@ -3,7 +3,7 @@ package logrusbugsnag
 import (
 	"bytes"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"sync"
 	"testing"
@@ -25,7 +25,7 @@ type nilRoundTripper struct{}
 
 func (rt *nilRoundTripper) RoundTrip(_ *http.Request) (*http.Response, error) {
 	return &http.Response{
-		Body:       ioutil.NopCloser(bytes.NewReader(nil)),
+		Body:       io.NopCloser(bytes.NewReader(nil)),
 		StatusCode: http.StatusOK,
 	}, nil
 }
@@ -33,7 +33,7 @@ func (rt *nilRoundTripper) RoundTrip(_ *http.Request) (*http.Response, error) {
 func setup(record bool) {
 	testOnce.Do(func() {
 		l := logrus.New()
-		l.Out = ioutil.Discard
+		l.Out = io.Discard
 
 		bugsnag.Configure(bugsnag.Configuration{
 			APIKey: testAPIKey,
@@ -57,7 +57,7 @@ func BenchmarkHook_Fire(b *testing.B) {
 	setup(false)
 
 	l := logrus.New()
-	l.Out = ioutil.Discard
+	l.Out = io.Discard
 
 	hook, err := NewBugsnagHook(nil)
 	assert.NoError(b, err)
@@ -89,7 +89,7 @@ func TestNewBugsnagHook(t *testing.T) {
 	setup(true)
 
 	l := logrus.New()
-	l.Out = ioutil.Discard
+	l.Out = io.Discard
 
 	hook, err := NewBugsnagHook(nil)
 	assert.NoError(t, err)

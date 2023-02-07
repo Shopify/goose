@@ -3,7 +3,6 @@ package profiler
 import (
 	"context"
 	"errors"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	httppprof "net/http/pprof"
@@ -19,7 +18,7 @@ func pprofUIHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	vars := mux.Vars(r)
 
-	f, err := ioutil.TempFile("", "pprof.*.pb")
+	f, err := os.CreateTemp("", "pprof.*.pb")
 	if err != nil {
 		log(ctx, err).Error("error creating temporary file")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
