@@ -33,6 +33,6 @@ func (b *logBackend) log(ctx context.Context, mType string, name string, value i
 		"tags":   append(b.tags, tags...),
 		"value":  value,
 		"rate":   rate,
-	}).Debug("emit statsd")
+	}).Debug("emit metric")
 	return nil
 }

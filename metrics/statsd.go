@@ -1,4 +1,4 @@
-// Package statsd contains a singleton statsd client for use in all other
+// Package metrics contains a singleton statsd client for use in all other
 // packages. It can be configured once at application startup, and imported by
 // any package that wishes to record metrics.
 package metrics
@@ -14,7 +14,7 @@ import (
 	"github.com/Shopify/goose/v2/logger"
 )
 
-var log = logger.New("statsd")
+var log = logger.New("metrics")
 
 // Backend is an interface to a Statsd instance, currently implemented by
 // nullBackend and NewDatadogBackend (go-dogstatsd).
@@ -44,7 +44,7 @@ func SetBackend(b Backend) {
 }
 
 // ErrUnknownBackend is returned when the statsd backend implementation is not known.
-var ErrUnknownBackend = fmt.Errorf("unknown statsd backend type")
+var ErrUnknownBackend = fmt.Errorf("unknown metrics backend type")
 
 // NewBackend returns the appropriate Backend for the given implementation and host.
 // STATSD_DEFAULT_TAGS env variable will be read automatically and added to default tags.
@@ -67,6 +67,6 @@ func NewBackend(impl, addr, prefix string, tags ...string) (Backend, error) {
 
 func warnIfError(ctx context.Context, err error) {
 	if err != nil {
-		log(ctx, err).WithField("error", err).Warn("couldn't submit event to statsd")
+		log(ctx, err).WithField("error", err).Warn("error submitting metric")
 	}
 }
