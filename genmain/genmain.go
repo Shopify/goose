@@ -15,8 +15,8 @@ import (
 	"gopkg.in/tomb.v2"
 
 	"github.com/Shopify/goose/v2/logger"
+	"github.com/Shopify/goose/v2/metrics"
 	"github.com/Shopify/goose/v2/safely"
-	"github.com/Shopify/goose/v2/statsd"
 )
 
 var log = logger.New("genmain")
@@ -32,8 +32,8 @@ var (
 	// error has occurred, just that the components should gracefully exit.
 	ErrShutdownRequested = errors.New("shutdown requested")
 
-	metricRun      = &statsd.Timer{Name: "genmain.run"}
-	metricShutdown = &statsd.Timer{Name: "genmain.shutdown"}
+	metricRun      = &metrics.Timer{Name: "genmain.run"}
+	metricShutdown = &metrics.Timer{Name: "genmain.shutdown"}
 )
 
 // Main represents a collection of components whose lifecycles are tied together.
@@ -139,7 +139,7 @@ func (m *Main) Kill(reason error) {
 
 		if !waitAny(killed, deadline) {
 			for _, component := range alive {
-				metricShutdown.Duration(ctx, time.Since(shutdownStart), statsd.Tags{
+				metricShutdown.Duration(ctx, time.Since(shutdownStart), metrics.Tags{
 					"success":       false,
 					"deadline":      m.shutdownDeadline,
 					"mainComponent": componentName(component),
@@ -154,7 +154,7 @@ func (m *Main) Kill(reason error) {
 		i := 0
 		for _, component := range alive {
 			if isDead(component.Tomb()) {
-				metricShutdown.Duration(ctx, time.Since(shutdownStart), statsd.Tags{
+				metricShutdown.Duration(ctx, time.Since(shutdownStart), metrics.Tags{
 					"success":       true,
 					"deadline":      m.shutdownDeadline,
 					"mainComponent": componentName(component),

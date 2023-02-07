@@ -17,13 +17,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/tomb.v2"
 
+	"github.com/Shopify/goose/v2/metrics"
 	"github.com/Shopify/goose/v2/safely"
-	"github.com/Shopify/goose/v2/statsd"
 )
 
 func TestRequestMetricsMiddleware(t *testing.T) {
 	var recordedTags []string
-	statsd.SetBackend(statsd.NewForwardingBackend(func(_ context.Context, mType string, name string, value interface{}, tags []string, _ float64) error {
+	metrics.SetBackend(metrics.NewForwardingBackend(func(_ context.Context, mType string, name string, value interface{}, tags []string, _ float64) error {
 		if name == metricHTTPRequest.Name {
 			recordedTags = tags
 		}

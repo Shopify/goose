@@ -1,4 +1,4 @@
-package statsd
+package metrics
 
 import "context"
 

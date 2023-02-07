@@ -1,11 +1,11 @@
-package statsd
+package metrics
 
 import (
 	"context"
 	"testing"
 	"time"
 
-	"github.com/Shopify/goose/v2/statsd/mocks"
+	"github.com/Shopify/goose/v2/metrics/mocks"
 )
 
 func TestTiming(t *testing.T) {

@@ -1,4 +1,4 @@
-package statsd
+package metrics
 
 // collector represents a metric that can be collected.
 type collector struct {

@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/sync/semaphore"
 
-	"github.com/Shopify/goose/v2/statsd"
+	"github.com/Shopify/goose/v2/metrics"
 )
 
 const (
@@ -30,7 +30,7 @@ type Limiter interface {
 }
 
 type gaugor interface {
-	Gauge(ctx context.Context, n float64, ts ...statsd.Tags)
+	Gauge(ctx context.Context, n float64, ts ...metrics.Tags)
 }
 
 type limiter struct {
@@ -39,7 +39,7 @@ type limiter struct {
 	waiting       int32
 	running       int32
 	gauge         gaugor
-	tags          statsd.Tags
+	tags          metrics.Tags
 	sampling      int32
 	sampleCounter int32
 }
@@ -48,20 +48,20 @@ func NewLimiter(concurrency uint) Limiter {
 	return NewLimiterWithGauge(concurrency, nil, nil)
 }
 
-func NewLimiterWithGauge(concurrency uint, gauge gaugor, tags statsd.Tags) Limiter {
+func NewLimiterWithGauge(concurrency uint, gauge gaugor, tags metrics.Tags) Limiter {
 	return NewLimiterWithSampledGauge(concurrency, gauge, 0, tags)
 }
 
-func NewGauge(gauge gaugor, tags statsd.Tags) Limiter {
+func NewGauge(gauge gaugor, tags metrics.Tags) Limiter {
 	return NewSampledGauge(gauge, AlwaysRecord, tags)
 }
 
-func NewSampledGauge(gauge gaugor, sampling int32, tags statsd.Tags) Limiter {
+func NewSampledGauge(gauge gaugor, sampling int32, tags metrics.Tags) Limiter {
 	return NewLimiterWithSampledGauge(NoLimit, gauge, sampling, tags)
 }
 
 // NewLimiterWithSampledGauge creates a Limiter that will publish the a gauge every <sampling> Run
-func NewLimiterWithSampledGauge(concurrency uint, gauge gaugor, sampling int32, tags statsd.Tags) Limiter {
+func NewLimiterWithSampledGauge(concurrency uint, gauge gaugor, sampling int32, tags metrics.Tags) Limiter {
 	limiter := &limiter{
 		concurrency: concurrency,
 		gauge:       gauge,
@@ -111,7 +111,7 @@ func (c *limiter) deltaAndMaybePublish(ctx context.Context, ptr *int32, delta in
 			return
 		}
 	}
-	c.gauge.Gauge(ctx, float64(current), statsd.Tags{"state": state}, c.tags)
+	c.gauge.Gauge(ctx, float64(current), metrics.Tags{"state": state}, c.tags)
 }
 
 func (c *limiter) Waiting() int32 {

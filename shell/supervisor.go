@@ -10,11 +10,11 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Shopify/goose/v2/logger"
-	"github.com/Shopify/goose/v2/statsd"
+	"github.com/Shopify/goose/v2/metrics"
 )
 
 var (
-	metricCommandRun = &statsd.Timer{Name: "shell.command.run"}
+	metricCommandRun = &metrics.Timer{Name: "shell.command.run"}
 )
 
 type Supervisor interface {
