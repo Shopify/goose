@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"syscall"
 	"testing"
@@ -178,15 +180,20 @@ func TestCommandRunWaitPipeFails(t *testing.T) {
 
 func TestCommandWithWorkingDir(t *testing.T) {
 	ctx := context.Background()
+
+	tmpdir, err := filepath.EvalSymlinks(os.TempDir())
+	assert.NoError(t, err)
+
 	stdout, _, err := NewBuilder(ctx, "pwd").
-		WithWorkingDir("/tmp").
+		WithWorkingDir(tmpdir).
 		Prepare().
 		RunAndGetOutput()
+	assert.NoError(t, err)
 
+	expected, err := filepath.EvalSymlinks(tmpdir)
 	assert.NoError(t, err)
-	expected, err := filepath.EvalSymlinks("/tmp")
-	assert.NoError(t, err)
-	assert.Equal(t, []byte(expected+"\n"), stdout)
+
+	assert.Equal(t, expected, strings.TrimSuffix(string(stdout), "\n"))
 }
 
 func TestCommandEnvDoesNotEval(t *testing.T) {
