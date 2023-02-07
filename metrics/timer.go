@@ -15,7 +15,7 @@ type Timer collector
 //
 // The last parameter is an arbitrary array of tags as maps.
 func (t *Timer) Duration(ctx context.Context, n time.Duration, ts ...Tags) {
-	tags := getStatsTags(ctx, ts...)
+	tags := getStatsTagsMap(ctx).Merge(ts...)
 	warnIfError(ctx, currentBackend.Distribution(ctx, t.Name, n.Seconds()*1000, tags, t.Rate.Rate()))
 }
 

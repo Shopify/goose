@@ -9,7 +9,7 @@ import (
 )
 
 func TestBackend(t *testing.T) {
-	dd, err := NewDatadogBackend("localhost:8125", "catwalk", []string{"global:tag"})
+	dd, err := NewDatadogBackend("localhost:8125", "catwalk", Tags{"global": "tag"})
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -19,14 +19,14 @@ func TestBackend(t *testing.T) {
 	}{
 		{impl: "datadog", exp: dd},
 		{impl: "null", exp: NewNullBackend()},
-		{impl: "log", exp: NewLogBackend("catwalk", []string{})},
+		{impl: "log", exp: NewLogBackend("catwalk", Tags{})},
 		{err: ErrUnknownBackend},
 		{impl: "WHAT", err: ErrUnknownBackend},
 	}
 
 	for _, test := range tests {
 		currentBackend = nil
-		b, err := NewBackend(test.impl, "localhost:8125", "catwalk", "global:tag")
+		b, err := NewBackend(test.impl, "localhost:8125", "catwalk", Tags{"global": "tag"})
 		if test.err != nil {
 			fmt.Printf("testing for: %s\n", test.impl)
 			require.Nil(t, currentBackend)

@@ -23,17 +23,17 @@ var log = logger.New("metrics")
 // need them.
 type Backend interface {
 	// Gauge measures the value of a metric at a particular time.
-	Gauge(ctx context.Context, name string, value float64, tags []string, rate float64) error
+	Gauge(ctx context.Context, name string, value float64, tags Tags, rate float64) error
 	// Count tracks how many times something happened per second.
-	Count(ctx context.Context, name string, value int64, tags []string, rate float64) error
+	Count(ctx context.Context, name string, value int64, tags Tags, rate float64) error
 	// Histogram tracks the statistical distribution of a set of values on each host.
-	Histogram(ctx context.Context, name string, value float64, tags []string, rate float64) error
+	Histogram(ctx context.Context, name string, value float64, tags Tags, rate float64) error
 	// Distribution tracks the statistical distribution of a set of values across your infrastructure.
-	Distribution(ctx context.Context, name string, value float64, tags []string, rate float64) error
+	Distribution(ctx context.Context, name string, value float64, tags Tags, rate float64) error
 	// Set counts the number of unique elements in a group.
-	Set(ctx context.Context, name string, value string, tags []string, rate float64) error
+	Set(ctx context.Context, name string, value string, tags Tags, rate float64) error
 	// Timing sends timing information, it is an alias for TimeInMilliseconds
-	Timing(ctx context.Context, name string, value time.Duration, tags []string, rate float64) error
+	Timing(ctx context.Context, name string, value time.Duration, tags Tags, rate float64) error
 }
 
 var currentBackend = NewNullBackend()
@@ -48,7 +48,7 @@ var ErrUnknownBackend = fmt.Errorf("unknown metrics backend type")
 
 // NewBackend returns the appropriate Backend for the given implementation and host.
 // STATSD_DEFAULT_TAGS env variable will be read automatically and added to default tags.
-func NewBackend(impl, addr, prefix string, tags ...string) (Backend, error) {
+func NewBackend(impl, addr, prefix string, tags Tags) (Backend, error) {
 	var err error
 	var b Backend
 	switch strings.ToLower(impl) {

@@ -6,8 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/mock"
-
-	"github.com/Shopify/goose/v2/metrics/mocks"
 )
 
 func TestTimer_StartTimer(t *testing.T) {
@@ -15,12 +13,12 @@ func TestTimer_StartTimer(t *testing.T) {
 
 	ctx := WithTags(context.Background(), Tags{"context": "ok"})
 
-	statsd := new(mocks.Backend)
+	statsd := new(MockBackend)
 	SetBackend(statsd)
 	metric := &Timer{Name: "metric"}
 
 	t.Run("Finish", func(t *testing.T) {
-		statsd.On("Distribution", ctx, "metric", mock.Anything, []string{"context:ok", "finish:ok", "starttimer:ok"}, 1.0).Return(nil).Once()
+		statsd.On("Distribution", ctx, "metric", mock.Anything, Tags{"context": "ok", "finish": "ok", "starttimer": "ok"}, 1.0).Return(nil).Once()
 
 		start := metric.StartTimer(ctx, Tags{"starttimer": "ok"})
 		start.Finish(Tags{"finish": "ok"})
@@ -29,7 +27,7 @@ func TestTimer_StartTimer(t *testing.T) {
 	})
 
 	t.Run("SuccessFinish", func(t *testing.T) {
-		statsd.On("Distribution", ctx, "metric", mock.Anything, []string{"context:ok", "starttimer:ok", "success:false", "successfinish:ok"}, 1.0).Return(nil).Once()
+		statsd.On("Distribution", ctx, "metric", mock.Anything, Tags{"context": "ok", "starttimer": "ok", "success": false, "successfinish": "ok"}, 1.0).Return(nil).Once()
 
 		err := io.EOF
 		start := metric.StartTimer(ctx, Tags{"starttimer": "ok"})
@@ -39,7 +37,7 @@ func TestTimer_StartTimer(t *testing.T) {
 	})
 
 	t.Run("SetTags", func(t *testing.T) {
-		statsd.On("Distribution", ctx, "metric", mock.Anything, []string{"context:ok", "settags:ok", "starttimer:ok"}, 1.0).Return(nil).Once()
+		statsd.On("Distribution", ctx, "metric", mock.Anything, Tags{"context": "ok", "settags": "ok", "starttimer": "ok"}, 1.0).Return(nil).Once()
 
 		start := metric.StartTimer(ctx, Tags{"starttimer": "ok"})
 		start.SetTags(Tags{"settags": "ok"})

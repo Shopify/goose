@@ -12,7 +12,7 @@ import (
 	"github.com/Shopify/goose/v2/logger"
 )
 
-var exampleBackend = NewForwardingBackend(func(_ context.Context, mType string, name string, value interface{}, tags []string, _ float64) error {
+var exampleBackend = NewForwardingBackend(func(_ context.Context, mType string, name string, value interface{}, tags Tags, _ float64) error {
 	_, err := fmt.Printf("%s: %s: %v %v\n", mType, name, value, tags)
 	return err
 })
@@ -43,7 +43,7 @@ func ExampleWithTags() {
 	metric.Count(ctx, 10)
 
 	// Output:
-	// count: page.view: 10 [email:unknown user:anonymous]
+	// count: page.view: 10 map[email:unknown user:anonymous]
 }
 
 func ExampleWatchingTaggable() {
@@ -58,7 +58,7 @@ func ExampleWatchingTaggable() {
 	metric.Count(ctx, 10)
 
 	// Output:
-	// count: page.view: 10 [email:unknown user:anonymous]
+	// count: page.view: 10 map[email:unknown user:anonymous]
 }
 
 func ExampleSelectKeys() {
@@ -84,7 +84,7 @@ func ExampleSelectKeys() {
 	logger.ContextLog(ctx, nil, entry).Info("example")
 
 	// Output:
-	// count: page.view: 10 [testField:test]
+	// count: page.view: 10 map[testField:test]
 	// level=info msg=example foo=bar testField=test
 }
 

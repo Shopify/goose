@@ -15,8 +15,6 @@ var (
 	tagsKey = contextKey{}
 )
 
-type Tags map[string]interface{}
-
 // Taggable is meant to be attached to a Context, such that StatsTags() will be appended to recorded metrics.
 type Taggable interface {
 	StatsTags() Tags

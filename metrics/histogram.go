@@ -8,6 +8,6 @@ type Histogram collector
 
 // The last parameter is an arbitrary array of tags as maps.
 func (m *Histogram) Histogram(ctx context.Context, n float64, ts ...Tags) {
-	tags := getStatsTags(ctx, ts...)
+	tags := getStatsTagsMap(ctx).Merge(ts...)
 	warnIfError(ctx, currentBackend.Histogram(ctx, m.Name, n, tags, m.Rate.Rate()))
 }

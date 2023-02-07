@@ -15,22 +15,22 @@ func Test_defaultTagsFromEnv(t *testing.T) {
 	tt := []struct {
 		name        string
 		envVarValue string
-		wantTags    []string
+		wantTags    Tags
 	}{
 		{
-			name:        "when not set, returns nil",
+			name:        "when not set, returns empty map",
 			envVarValue: "",
-			wantTags:    nil,
+			wantTags:    Tags{},
 		},
 		{
 			name:        "when no comma, returns one tag",
 			envVarValue: "foo:bar",
-			wantTags:    []string{"foo:bar"},
+			wantTags:    Tags{"foo": "bar"},
 		},
 		{
 			name:        "when there is comma, break into multiple tags",
 			envVarValue: "foo:bar,kube_namespace:production-unrestricted-k9asf9",
-			wantTags:    []string{"foo:bar", "kube_namespace:production-unrestricted-k9asf9"},
+			wantTags:    Tags{"foo": "bar", "kube_namespace": "production-unrestricted-k9asf9"},
 		},
 	}
 
