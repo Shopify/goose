@@ -1,6 +1,8 @@
 package metrics
 
-import "context"
+import (
+	"context"
+)
 
 // SetCounter represents a set-type metric, which counts unique strings.
 // https://docs.datadoghq.com/developers/metrics/sets/
@@ -10,6 +12,7 @@ type SetCounter collector
 //
 // The last parameter is an arbitrary array of tags as maps.
 func (c *SetCounter) CountUnique(ctx context.Context, value string, ts ...Tags) {
-	tags := getStatsTagsMap(ctx).Merge(ts...)
-	warnIfError(ctx, currentBackend.Set(ctx, c.Name, value, tags, c.Rate.Rate()))
+	tags := MergeTagsList(ts...)
+	backend := BackendFromContext(ctx)
+	logError(ctx, backend.Set(ctx, c.Name, value, tags, c.Rate.Rate()))
 }

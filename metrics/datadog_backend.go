@@ -9,22 +9,16 @@ import (
 
 // NewDatadogBackend instantiates a new datadog/statsd connection. When running
 // in containers at shopify, the endpoint should generally be "localhost:8125".
-//
-// `namespace` is an optional prefix to be prepended to every metric submitted.
-// It should end with a period to separate it from the metric name.
-//
-// `tags` is a set of tags that will be included with every metric submitted.
-// STATSD_DEFAULT_TAGS env variable will be read automatically and added to default tags.
-func NewDatadogBackend(endpoint, namespace string, tags Tags) (Backend, error) {
+func NewDatadogBackend(endpoint string) (Backend, error) {
 	client, err := statsd.New(endpoint)
 	if err != nil {
 		return nil, err
 	}
-	client.Namespace = namespace
-	client.Tags = defaultTagsFromEnv().Merge(tags).StringSlice()
-	return &datadogBackend{
-		client: client,
-	}, nil
+	return NewBackendFromDatadog(client), nil
+}
+
+func NewBackendFromDatadog(client *statsd.Client) Backend {
+	return &datadogBackend{client: client}
 }
 
 type datadogBackend struct {
