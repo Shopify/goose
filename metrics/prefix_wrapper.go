@@ -12,7 +12,7 @@ func NewPrefixWrapper(backend Backend, prefix string) Backend {
 		return backend
 	}
 	if !strings.HasSuffix(prefix, ".") {
-		prefix = prefix + "."
+		prefix += "."
 	}
 	return &prefixWrapper{
 		backend: backend,

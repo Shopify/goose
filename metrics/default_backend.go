@@ -1,12 +1,12 @@
 package metrics
 
 import (
-	"github.com/sirupsen/logrus"
 	"os"
 	"strings"
 	"sync"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 const (

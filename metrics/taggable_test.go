@@ -27,16 +27,6 @@ func (t *testTaggable) StatsTags() Tags {
 	return Tags(*t)
 }
 
-type testLoggable logrus.Fields
-
-func (l *testLoggable) LogFields() logrus.Fields {
-	return logrus.Fields(*l)
-}
-
-func (l *testLoggable) StatsTags() Tags {
-	return SelectKeys(l.LogFields(), "testField")
-}
-
 func ExampleWithTags() {
 	SetDefaultBackend(NewExampleBackend())
 
