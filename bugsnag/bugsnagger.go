@@ -214,7 +214,7 @@ func (snagger *bugsnagger) Setup(apiKey string, commit string, env string, packa
 	// Add the bugsnag package and it's folder location on disk to bugsnag's ProjectPackages.
 	// This will ensure that Notify calls from bugsnagger.go will always share the same file name
 	// and will retain grouping across Shopify/goose dependency upgrades.
-	packages = append(packages, "main*", "github.com/Shopify/goose/bugsnag")
+	packages = append(packages, "main*", "github.com/Shopify/goose/v2/bugsnag")
 	if _, file, _, ok := runtime.Caller(0); ok {
 		gooseMod := strings.TrimSuffix(file, "bugsnag/bugsnagger.go")
 		packages = append(packages, gooseMod+"*")

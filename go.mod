@@ -1,4 +1,4 @@
-module github.com/Shopify/goose
+module github.com/Shopify/goose/v2
 
 go 1.20
 

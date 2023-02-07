@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 
-	"github.com/Shopify/goose/statsd/mocks"
+	"github.com/Shopify/goose/v2/statsd/mocks"
 )
 
 func TestTimer_StartTimer(t *testing.T) {

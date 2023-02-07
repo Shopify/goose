@@ -1,6 +1,6 @@
 package genmain
 
-import "github.com/Shopify/goose/safely"
+import "github.com/Shopify/goose/v2/safely"
 
 // Component is used to represent various "components". At a high level, main()
 // essentially cobbles together a few components whose lifecycles are managed

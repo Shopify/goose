@@ -1,6 +1,6 @@
 package profiler_test
 
-import "github.com/Shopify/goose/profiler"
+import "github.com/Shopify/goose/v2/profiler"
 
 func ExampleNewProfiler() {
 	cpuFile := "cpu.prof"

@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Shopify/goose/logger"
+	"github.com/Shopify/goose/v2/logger"
 )
 
 var exampleBackend = NewForwardingBackend(func(_ context.Context, mType string, name string, value interface{}, tags []string, _ float64) error {

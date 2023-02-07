@@ -7,7 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/Shopify/goose/srvutil"
+	"github.com/Shopify/goose/v2/srvutil"
 )
 
 // NewServlet returns a Servlet which can serve pprof requests

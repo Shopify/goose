@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/tomb.v2"
 
-	"github.com/Shopify/goose/safely"
+	"github.com/Shopify/goose/v2/safely"
 )
 
 type dbConn interface {

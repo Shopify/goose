@@ -9,8 +9,8 @@ import (
 	"github.com/gorilla/mux"
 	"gopkg.in/tomb.v2"
 
-	"github.com/Shopify/goose/logger"
-	"github.com/Shopify/goose/safely"
+	"github.com/Shopify/goose/v2/logger"
+	"github.com/Shopify/goose/v2/safely"
 )
 
 const (

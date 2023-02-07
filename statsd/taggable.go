@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/Shopify/goose/logger"
+	"github.com/Shopify/goose/v2/logger"
 )
 
 // This create a private key-space in the Context, meaning that only this package can get or set "contextKey" types

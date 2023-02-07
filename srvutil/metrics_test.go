@@ -17,9 +17,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/tomb.v2"
 
-	"github.com/Shopify/goose/metrics"
-	"github.com/Shopify/goose/safely"
-	"github.com/Shopify/goose/statsd"
+	"github.com/Shopify/goose/v2/metrics"
+	"github.com/Shopify/goose/v2/safely"
+	"github.com/Shopify/goose/v2/statsd"
 )
 
 func TestRequestMetricsMiddleware(t *testing.T) {

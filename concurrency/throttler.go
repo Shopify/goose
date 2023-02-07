@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Shopify/goose/timetracker"
+	"github.com/Shopify/goose/v2/timetracker"
 )
 
 func NewThrottler(limiter Limiter, tracker timetracker.Tracker, waitTimeout time.Duration) Throttler {

@@ -16,8 +16,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/tomb.v2"
 
-	"github.com/Shopify/goose/safely"
-	"github.com/Shopify/goose/syncio"
+	"github.com/Shopify/goose/v2/safely"
+	"github.com/Shopify/goose/v2/syncio"
 )
 
 func ExampleNewServer() {

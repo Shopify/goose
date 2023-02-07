@@ -9,8 +9,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/Shopify/goose/logger"
-	"github.com/Shopify/goose/metrics"
+	"github.com/Shopify/goose/v2/logger"
+	"github.com/Shopify/goose/v2/metrics"
 )
 
 type Supervisor interface {
