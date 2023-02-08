@@ -16,13 +16,19 @@ func RegisterStandardLoggerHook() {
 }
 
 func RegisterHook(logger *logrus.Logger) {
+	// Do not register twice
+	for _, hook := range logger.Hooks[logrus.ErrorLevel] {
+		if hook == defaultHook {
+			return
+		}
+	}
 	logger.AddHook(defaultHook)
 }
 
 func DefaultLogger() *logrus.Logger {
 	defaultLoggerOnce.Do(func() {
 		defaultLogger = DuplicateLogger(logrus.StandardLogger())
-		defaultLogger.AddHook(defaultHook)
+		RegisterHook(defaultLogger)
 	})
 
 	return defaultLogger

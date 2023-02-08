@@ -1,53 +1,53 @@
 /*
-Package bugsnag provides a simple wrapper over the bugsnag/bugsnag-go lib that maintains
-the same Notify(err, rawData...) API but with improved setup and error decoration.
+Package bugsnag provides hooks on the bugsnag library.
 
 # Usage
 
 The client should only need to use the static/package level APIs defined in bugsnag.go
 
-	func main(){
-		bugsnag.Setup("apiKey", "SHA", "env", []string{"github.com/Shopify/yourClientRepo"})
-		defer bugsnag.AutoNotify()
+```go
 
-		go func(){
-			defer bugsnag.AutoRecover()
-			panic("err")
-		}
+	import "github.com/Shopify/goose/v2/bugsnag"
+	import bugsnaggo "github.com/bugsnag/bugsnag-go/v2"
+
+	func main(){
+		bugsnag.AutoConfigure("apiKey", "SHA", "env", []string{"github.com/Shopify/yourClientRepo"})
+		defer bugsnaggo.AutoNotify()
 
 		i, err := somethingThatCanError()
-		bugsnag.Notify(err, rawData...)
+		bugsnaggo.Notify(err, rawData...)
 	}
+
+```
 
 # Features
 
-Smart handling of errors passed to notify populating the "Error" tab in bugsnag. If the error is wrapped using pkg/errors then its stacktrace
+Smart handling of errors passed to notify populating the "error" tab in bugsnag. If the error is wrapped using pkg/errors then its stacktrace
 and context messages are extracted correctly.
 
-The bugsnag.ErrorClass is set intelligently dealing with go.mod versions. You can also implement the errorClasser interface
-to override this using the bugsnag.WithErrorClass(err, class) and bugsnag.Wrapf(err, format, args...) helper methods.
+You can use bugsnag.WithErrorClass(err, class) or implement the ErrorClassProvider interface to better control how the error is grouped in Bugsnag.
 
-Better support for logrus.Fields, *logrus.Entry, *http.Request, *url.Error and *http2.StreamError objects.
+Better support for logrus.Fields, *logrus.Entry, and *http.Request
 
-HTTP POST request body is extracted into the the Request tab in bugsnag.
+HTTPRequestFormHook is available to extract the HTTP POST request body into the request tab in bugsnag, but it is not available by default.
 
 Project packages are handled correctly which helps with proper grouping of bugs in bugsnag.
 
-The default panic handler is fixed so that panics are not dropped in containerized environments.
+# A panic handler is available, but not enabled by default, since it has the tendency to not play nice with many go invocation methods
 
-Create custom bugsnag tabs easily by implementing the TabWriter interface or Tab objects passed in as rawData. e.g.:
+Create custom bugsnag tabs easily by implementing the TabProvider interface or Tab objects passed in as rawData. e.g.:
 
-	type customTab struct {
+	type tabProvider struct {
 		val string
 	}
 
-	func (ct *customTab) CreateBugsnagTab() Tab {
+	func (ct *tabProvider) CreateBugsnagTab() Tab {
 		return Tab{
 			Label: "Custom Tab",
 			Rows:  Rows{"Key": ct.val},
 		}
 	}
 
-	bugsnag.Notify(err, &customTab{"value"})
+	bugsnag.Notify(err, &tabProvider{"value"})
 */
 package bugsnag
