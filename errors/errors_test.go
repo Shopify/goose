@@ -2,6 +2,7 @@ package errors
 
 import (
 	"context"
+	"errors"
 	stderrors "errors"
 	"testing"
 
@@ -29,6 +30,18 @@ func TestWrap(t *testing.T) {
 	require.Equal(t, "outer: inner", err.Error())
 }
 
+func TestWrapJoined(t *testing.T) {
+	err := Wrap(stderrors.Join(New("inner 1"), New("inner 2")), "outer")
+	require.NotNil(t, err)
+	require.Equal(t, "outer: inner 1\ninner 2", err.Error())
+}
+
+func TestJoinWrapped(t *testing.T) {
+	err := errors.Join(New("first"), Wrap(New("inner"), "outer"))
+	require.NotNil(t, err)
+	require.Equal(t, "first\nouter: inner", err.Error())
+}
+
 func TestWrapCtx_Nil(t *testing.T) {
 	ctx := context.Background()
 	err := WrapCtx(ctx, nil, "")
@@ -42,6 +55,13 @@ func TestWrapCtx(t *testing.T) {
 	require.Equal(t, "outer: inner", err.Error())
 }
 
+func TestWrapCtxJoined(t *testing.T) {
+	ctx := context.Background()
+	err := WrapCtx(ctx, stderrors.Join(New("first"), New("second")), "outer")
+	require.NotNil(t, err)
+	require.Equal(t, "outer: first\nsecond", err.Error())
+}
+
 func TestWithCtx(t *testing.T) {
 	ctx := context.Background()
 	err := WithCtx(ctx, stderrors.New("inner"), Fields{"key": "val"})
@@ -51,10 +71,25 @@ func TestWithCtx(t *testing.T) {
 	require.Equal(t, Fields{"key": "val"}, FieldsFromError(err))
 }
 
+func TestWithCtxJoined(t *testing.T) {
+	ctx := context.Background()
+	err := WithCtx(ctx, stderrors.Join(New("first"), New("second")), Fields{"key": "val"})
+	require.NotNil(t, err)
+	require.Equal(t, "first\nsecond", err.Error())
+	require.Equal(t, Fields{"key": "val"}, FieldsFromError(err))
+}
+
 func TestWith(t *testing.T) {
 	err := With(stderrors.New("inner"), Fields{"key": "val"})
 	require.NotNil(t, err)
 	require.Equal(t, "inner", err.Error())
 
+	require.Equal(t, Fields{"key": "val"}, FieldsFromError(err))
+}
+
+func TestWithJoined(t *testing.T) {
+	err := With(stderrors.Join(New("first"), New("second")), Fields{"key": "val"})
+	require.NotNil(t, err)
+	require.Equal(t, "first\nsecond", err.Error())
 	require.Equal(t, Fields{"key": "val"}, FieldsFromError(err))
 }
