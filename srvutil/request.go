@@ -11,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/Shopify/goose/v2/logger"
-	"github.com/Shopify/goose/v2/statsd"
+	"github.com/Shopify/goose/v2/metrics"
 )
 
 var log = logger.New("srvutil")
@@ -54,7 +54,7 @@ func buildRouteContext(r *http.Request) context.Context {
 	}
 
 	// Adds the route as log field and tag.
-	ctx = statsd.WithTag(ctx, RouteKey, tpl)
+	ctx = metrics.WithTag(ctx, RouteKey, tpl)
 
 	// Adds the mux variables as log fields only, but not tags.
 	fields := logrus.Fields{RouteKey: tpl}

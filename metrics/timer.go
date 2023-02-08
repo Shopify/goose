@@ -1,4 +1,4 @@
-package statsd
+package metrics
 
 import (
 	"context"
@@ -14,9 +14,10 @@ type Timer collector
 // operation -- and submits it to statsd.
 //
 // The last parameter is an arbitrary array of tags as maps.
-func (t *Timer) Duration(ctx context.Context, n time.Duration, ts ...Tags) {
-	tags := getStatsTags(ctx, ts...)
-	warnIfError(ctx, currentBackend.Distribution(ctx, t.Name, n.Seconds()*1000, tags, t.Rate.Rate()))
+func (t *Timer) Duration(ctx context.Context, duration time.Duration, ts ...Tags) {
+	tags := MergeTagsList(ts...)
+	backend := BackendFromContext(ctx)
+	logError(ctx, backend.Timing(ctx, t.Name, duration, tags, t.Rate.Rate()))
 }
 
 // Time runs a function, timing its execution, and submits the resulting

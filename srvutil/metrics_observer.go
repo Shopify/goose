@@ -7,7 +7,10 @@ import (
 
 	"github.com/Shopify/goose/v2/metrics"
 	"github.com/Shopify/goose/v2/redact"
-	"github.com/Shopify/goose/v2/statsd"
+)
+
+var (
+	metricHTTPRequest = &metrics.Timer{Name: "http.request"}
 )
 
 type RequestObserver interface {
@@ -29,12 +32,12 @@ func (o *DefaultRequestObserver) BeforeRequest(r *http.Request) {
 func (o *DefaultRequestObserver) AfterRequest(r *http.Request, recorder HTTPRecorder, requestDuration time.Duration) {
 	ctx := r.Context()
 
-	ctx = statsd.WithTagLogFields(ctx, statsd.Tags{
+	ctx = metrics.WithTagLogFields(ctx, metrics.Tags{
 		"statusCode":  recorder.StatusCode(),
 		"statusClass": fmt.Sprintf("%dxx", recorder.StatusCode()/100), // 2xx, 5xx, etc.
 	})
 
-	metrics.HTTPRequest.Duration(ctx, requestDuration)
+	metricHTTPRequest.Duration(ctx, requestDuration)
 
 	logger := log(ctx).
 		WithField("headers", redact.Headers(recorder.Header()))

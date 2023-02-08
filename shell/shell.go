@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/Shopify/goose/v2/logger"
-	"github.com/Shopify/goose/v2/statsd"
+	"github.com/Shopify/goose/v2/metrics"
 )
 
 var log = logger.New("shell")
@@ -60,8 +60,8 @@ type wrapper struct {
 	ctxCancellation bool
 }
 
-func (w *wrapper) StatsTags() statsd.Tags {
-	return statsd.Tags{
+func (w *wrapper) StatsTags() metrics.Tags {
+	return metrics.Tags{
 		// Only report the command since the rest may contain sensitive information.
 		"cmdPath": w.path,
 	}

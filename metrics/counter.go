@@ -1,6 +1,8 @@
-package statsd
+package metrics
 
-import "context"
+import (
+	"context"
+)
 
 // Counter represents a count-type metric, which takes increments.
 // https://docs.datadoghq.com/developers/metrics/counts/
@@ -11,8 +13,9 @@ type Counter collector
 //
 // The last parameter is an arbitrary array of tags as maps.
 func (c *Counter) Count(ctx context.Context, n int64, ts ...Tags) {
-	tags := getStatsTags(ctx, ts...)
-	warnIfError(ctx, currentBackend.Count(ctx, c.Name, n, tags, c.Rate.Rate()))
+	tags := MergeTagsList(ts...)
+	backend := BackendFromContext(ctx)
+	logError(ctx, backend.Count(ctx, c.Name, n, tags, c.Rate.Rate()))
 }
 
 // Incr is basically the same as Count(1)
