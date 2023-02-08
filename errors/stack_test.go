@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"errors"
 	"testing"
 
 	bugsnagerrors "github.com/bugsnag/bugsnag-go/v2/errors"
@@ -18,6 +19,14 @@ func nestedPkgError() error {
 
 func nestedBaseError() error {
 	return Wrap(New(""), "")
+}
+
+func joinedError() error {
+	return errors.Join(New("first"), New("second"))
+}
+
+func nestedJoinedError() error {
+	return Wrap(errors.Join(New("second"), New("third")), "first")
 }
 
 func Test_baseError_Callers(t *testing.T) {
@@ -40,6 +49,16 @@ func Test_baseError_Callers(t *testing.T) {
 			test:       "baseError-pkgError-stdError",
 			wrappedErr: nestedPkgError,
 			stackLen:   4, // asm_amd64.s - testing.go - Wrap(tt.wrappedErr(), "") - nestedPkgError
+		},
+		{
+			test:       "baseError-stdJoinedError",
+			wrappedErr: joinedError,
+			stackLen:   3,
+		},
+		{
+			test:       "baseError-stdNestedJoinedError",
+			wrappedErr: nestedJoinedError,
+			stackLen:   4,
 		},
 	}
 

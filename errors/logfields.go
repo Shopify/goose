@@ -1,7 +1,7 @@
 package errors
 
 import (
-	"github.com/Shopify/goose/logger"
+	"github.com/Shopify/goose/v2/logger"
 	"github.com/pkg/errors"
 )
 

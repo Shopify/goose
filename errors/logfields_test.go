@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Shopify/goose/logger"
+	"github.com/Shopify/goose/v2/logger"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )

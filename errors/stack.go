@@ -11,7 +11,14 @@ import (
 
 // findStackFromError returns the deepest stacktrace found. Support Courier errors and pkg/errors.
 func findStackFromError(err error) []uintptr {
-	if wrappedErr := stderrors.Unwrap(err); wrappedErr != nil {
+	if joined, ok := err.(interface{ Unwrap() []error }); ok {
+		for _, e := range joined.Unwrap() {
+			stack := findStackFromError(e) // recursion
+			if stack != nil {
+				return stack // an inner error has a stacktrace, escape the recursion
+			}
+		}
+	} else if wrappedErr := stderrors.Unwrap(err); wrappedErr != nil {
 		stack := findStackFromError(wrappedErr) // recursion
 		if stack != nil {
 			return stack // an inner error has a stacktrace, escape the recursion
