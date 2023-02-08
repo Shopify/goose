@@ -1,62 +1,59 @@
-#!/usr/bin/env ruby
+#!/bin/sh
 
-require 'fileutils'
-require 'open3'
-require 'open-uri'
+# This script is intentionally written to be POSIX compliant to be as portable as possible
 
-class Style
-  class << self
-    INSTALLER_URL = 'https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh'
-    EXECUTABLE = 'golangci-lint'
-    VERSION = '1.49.0'
-    VERSION_TAG = "v#{VERSION}"
+set -e
 
-    def call
-      install unless up_to_date?
-      run(*ARGV)
-    end
+VERSION="1.51.1"
+VERSION_TAG="v${VERSION}"
 
-    private
+INSTALLER_URL="github.com/golangci/golangci-lint/cmd/golangci-lint"
+EXECUTABLE="$(basename "${INSTALLER_URL}")"
 
-    def install_path
-      gopath = ENV.fetch('GOPATH', ENV.fetch('HOME')).split(':').first
-      File.join(gopath, 'bin')
-    end
+INSTALL_PATH="${HOME}/.local/share/${EXECUTABLE}/${VERSION}"
+EXECUTABLE_PATH="${INSTALL_PATH}/${EXECUTABLE}" # e.g. $HOME/.local/share/golangci/1.32.0/golangci-lint
 
-    def bin_path
-      File.join(install_path, EXECUTABLE)
-    end
+GOPATH="${GOPATH:-${HOME}}"
+GOPATH_PRIMARY="${GOPATH%%:*}" # Delete :* from the end, yielding the first path
+BIN_INSTALL_PATH="${GOPATH_PRIMARY}/bin"
+BIN_EXECUTABLE_PATH="${BIN_INSTALL_PATH}/${EXECUTABLE}" # e.g. $HOME/bin/golangci-lint
 
-    def exist?
-      File.executable?(bin_path)
-    end
+installed() {
+    [ -x "${EXECUTABLE_PATH}" ]
+}
 
-    def up_to_date?
-      return false unless exist?
-      out, stat = Open3.capture2(bin_path, '--version')
-      raise("Unable to check version of #{bin_path}") unless stat.success?
-      out.match(/\b#{VERSION}\b/)
-    end
+install() {
+    echo "Installing ${EXECUTABLE} version ${VERSION}" >&2
 
-    def install
-      puts "Installing #{EXECUTABLE}..."
+    mkdir -p "${INSTALL_PATH}"
+    GOBIN="${INSTALL_PATH}" go install "${INSTALLER_URL}@${VERSION_TAG}"
+}
 
-      open(INSTALLER_URL) do |installer|
-        Open3.popen2('sh', '-s', '--', '-b', install_path, VERSION_TAG) do |stdin, out, stat|
-          IO.copy_stream(installer, stdin)
-          stdin.close
-          print out.read
+linked() {
+    [ -L "${BIN_EXECUTABLE_PATH}" ] && [ "$(readlink "${BIN_EXECUTABLE_PATH}")" = "${EXECUTABLE_PATH}" ]
+}
 
-          raise("failed to install #{EXECUTABLE} #{VERSION_TAG}") unless stat.value.success?
-        end
-      end
-    end
+link() {
+    mkdir -p "${BIN_INSTALL_PATH}"
+    rm -fv "${BIN_EXECUTABLE_PATH}"
+    ln -sfv "${EXECUTABLE_PATH}" "${BIN_EXECUTABLE_PATH}"
+}
 
-    def run(*argv)
-      config = ENV.fetch('GOLANGCI_CONFIG', '.golangci.yml')
-      exec(bin_path, 'run', '--config', config, *argv)
-    end
-  end
-end
-
-__FILE__ == $PROGRAM_NAME and Style.call
+case "$1" in
+    "--installed")
+        installed
+        ;;
+    "--install")
+        installed || install
+        ;;
+    "--linked")
+        installed && linked
+        ;;
+    "--link")
+        (installed || install) && (linked || link)
+        ;;
+    *)
+        installed || install
+        exec "${EXECUTABLE_PATH}" "$@"
+        ;;
+esac

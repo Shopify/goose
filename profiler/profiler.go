@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"runtime/pprof"
 
-	"github.com/Shopify/goose/logger"
+	"github.com/Shopify/goose/v2/logger"
 )
 
 var log = logger.New("profiler")

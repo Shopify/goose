@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Shopify/goose/metrics"
-	"github.com/Shopify/goose/redact"
-	"github.com/Shopify/goose/statsd"
+	"github.com/Shopify/goose/v2/metrics"
+	"github.com/Shopify/goose/v2/redact"
+	"github.com/Shopify/goose/v2/statsd"
 )
 
 type RequestObserver interface {

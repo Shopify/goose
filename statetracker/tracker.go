@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Shopify/goose/logger"
+	"github.com/Shopify/goose/v2/logger"
 )
 
 var log = logger.New("stateTracker")

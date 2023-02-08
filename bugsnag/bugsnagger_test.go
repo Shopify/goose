@@ -70,7 +70,7 @@ func TestSetup(t *testing.T) {
 	require.Equal(t, env, bugsnaggo.Config.ReleaseStage)
 	require.Equal(t, pack, bugsnaggo.Config.ProjectPackages[0])
 	require.Equal(t, "main*", bugsnaggo.Config.ProjectPackages[1])
-	require.Equal(t, "github.com/Shopify/goose/bugsnag", bugsnaggo.Config.ProjectPackages[2])
+	require.Equal(t, "github.com/Shopify/goose/v2/bugsnag", bugsnaggo.Config.ProjectPackages[2])
 	require.True(t, strings.Contains(bugsnaggo.Config.ProjectPackages[3], projectDir+"/*"))
 	require.True(t, bugsnaggo.Config.Synchronous)
 }

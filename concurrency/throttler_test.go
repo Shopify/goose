@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/Shopify/goose/timetracker"
+	"github.com/Shopify/goose/v2/timetracker"
 )
 
 func TestThrottler(t *testing.T) {

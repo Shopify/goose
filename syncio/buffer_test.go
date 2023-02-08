@@ -8,7 +8,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	. "github.com/Shopify/goose/syncio"
+	. "github.com/Shopify/goose/v2/syncio"
 )
 
 const N = 10000       // make this bigger for a larger (and slower) test

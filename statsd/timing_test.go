@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Shopify/goose/statsd/mocks"
+	"github.com/Shopify/goose/v2/statsd/mocks"
 )
 
 func TestTiming(t *testing.T) {

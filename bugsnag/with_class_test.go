@@ -27,7 +27,7 @@ func TestFormatErrorClass(t *testing.T) {
 	err := WithErrorClass(errors.New("test error"), "FOO")
 	formatted := fmt.Sprintf("%+v", err)
 	require.Contains(t, formatted, "FOO: test error")
-	require.Contains(t, formatted, "github.com/Shopify/goose/bugsnag.TestFormatErrorClass")
+	require.Contains(t, formatted, "github.com/Shopify/goose/v2/bugsnag.TestFormatErrorClass")
 	require.Contains(t, formatted, projectDir+"/bugsnag/with_class_test.go")
 	require.Contains(t, formatted, "testing.tRunner")
 	require.Contains(t, formatted, "src/testing/testing.go")

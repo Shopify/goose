@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Shopify/goose/srvutil"
+	"github.com/Shopify/goose/v2/srvutil"
 )
 
 func ExampleRealIPMiddleware() {

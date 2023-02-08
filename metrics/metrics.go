@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	"github.com/Shopify/goose/statsd"
+	"github.com/Shopify/goose/v2/statsd"
 )
 
 // Note that statsd's default backend is the nullBackend, which doesn't do anything.

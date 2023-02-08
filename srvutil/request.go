@@ -10,8 +10,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 
-	"github.com/Shopify/goose/logger"
-	"github.com/Shopify/goose/statsd"
+	"github.com/Shopify/goose/v2/logger"
+	"github.com/Shopify/goose/v2/statsd"
 )
 
 var log = logger.New("srvutil")

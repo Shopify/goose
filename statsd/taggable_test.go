@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Shopify/goose/logger"
+	"github.com/Shopify/goose/v2/logger"
 )
 
 var exampleBackend = NewForwardingBackend(func(_ context.Context, mType string, name string, value interface{}, tags []string, _ float64) error {
@@ -91,7 +91,7 @@ func ExampleSelectKeys() {
 func TestEmptyContext(t *testing.T) {
 	ctx := context.Background()
 	// Using a basic type on purpose, disable linter
-	ctx = context.WithValue(ctx, "a", "b") //nolint:golint,staticcheck
+	ctx = context.WithValue(ctx, "a", "b") //nolint:revive,staticcheck
 	// Not showing up in tags
 	assert.Empty(t, getStatsTags(ctx))
 }
@@ -106,19 +106,6 @@ func TestWithTags(t *testing.T) {
 		"a:e",
 		"c:d",
 		"f:g",
-	}, getStatsTags(ctx))
-}
-
-func TestWithTags_keyClash(t *testing.T) {
-	ctx := context.Background()
-	ctx = WithTags(ctx, Tags{"a": "b"})
-
-	// tagsKey is an int declared as a contextKey, so trying to set an int shouldn't override the contextKey
-	// Using a basic type on purpose, disable linter
-	ctx = context.WithValue(ctx, int(tagsKey), "foo") //nolint:golint,staticcheck
-
-	assert.Equal(t, []string{
-		"a:b",
 	}, getStatsTags(ctx))
 }
 

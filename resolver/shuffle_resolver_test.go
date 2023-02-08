@@ -5,7 +5,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/Shopify/goose/random"
+	"github.com/Shopify/goose/v2/random"
 
 	"github.com/stretchr/testify/require"
 )

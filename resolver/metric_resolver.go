@@ -4,7 +4,7 @@ import (
 	"context"
 	"net"
 
-	"github.com/Shopify/goose/statsd"
+	"github.com/Shopify/goose/v2/statsd"
 )
 
 type metricResolver struct {

@@ -5,8 +5,9 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"syscall"
 	"testing"
@@ -25,7 +26,7 @@ func ExampleSupervisor_Wait() {
 	stdin.Write([]byte("foo"))
 	stdin.Close()
 
-	output, _ := ioutil.ReadAll(stdout)
+	output, _ := io.ReadAll(stdout)
 
 	// Must call Wait _after_ interacting with pipes
 	cmd.Wait()
@@ -142,7 +143,7 @@ func TestCommandRunPipe(t *testing.T) {
 	assert.NotEqual(t, 0, c.Process.Pid) // But the process exists
 
 	// Calling ReadAll will wait for the pipe to close, so all the output is there.
-	output, err := ioutil.ReadAll(pipe)
+	output, err := io.ReadAll(pipe)
 	assert.NoError(t, err)
 	assert.Equal(t, []byte("foo"), output)
 
@@ -172,21 +173,26 @@ func TestCommandRunWaitPipeFails(t *testing.T) {
 	assert.True(t, c.ProcessState.Exited())
 
 	// Calling ReadAll will wait for the pipe to close, so all the output is there.
-	_, err = ioutil.ReadAll(pipe)
+	_, err = io.ReadAll(pipe)
 	assert.Error(t, err, "read |0: file already closed")
 }
 
 func TestCommandWithWorkingDir(t *testing.T) {
 	ctx := context.Background()
+
+	tmpdir, err := filepath.EvalSymlinks(os.TempDir())
+	assert.NoError(t, err)
+
 	stdout, _, err := NewBuilder(ctx, "pwd").
-		WithWorkingDir("/tmp").
+		WithWorkingDir(tmpdir).
 		Prepare().
 		RunAndGetOutput()
+	assert.NoError(t, err)
 
+	expected, err := filepath.EvalSymlinks(tmpdir)
 	assert.NoError(t, err)
-	expected, err := filepath.EvalSymlinks("/tmp")
-	assert.NoError(t, err)
-	assert.Equal(t, []byte(expected+"\n"), stdout)
+
+	assert.Equal(t, expected, strings.TrimSuffix(string(stdout), "\n"))
 }
 
 func TestCommandEnvDoesNotEval(t *testing.T) {

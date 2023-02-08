@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/tomb.v2"
 
-	"github.com/Shopify/goose/genmain"
+	"github.com/Shopify/goose/v2/genmain"
 )
 
 type testComponent struct {

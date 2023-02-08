@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"net"
 
-	"github.com/Shopify/goose/random"
+	"github.com/Shopify/goose/v2/random"
 )
 
 type shuffleResolver struct {
