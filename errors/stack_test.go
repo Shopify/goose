@@ -1,7 +1,7 @@
 package errors
 
 import (
-	"errors"
+	stderrors "errors"
 	"testing"
 
 	bugsnagerrors "github.com/bugsnag/bugsnag-go/v2/errors"
@@ -22,11 +22,11 @@ func nestedBaseError() error {
 }
 
 func joinedError() error {
-	return errors.Join(New("first"), New("second"))
+	return stderrors.Join(New("first"), New("second"))
 }
 
 func nestedJoinedError() error {
-	return Wrap(errors.Join(New("second"), New("third")), "first")
+	return Wrap(stderrors.Join(New("second"), New("third")), "first")
 }
 
 func Test_baseError_Callers(t *testing.T) {
