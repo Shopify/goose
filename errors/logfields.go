@@ -1,8 +1,9 @@
 package errors
 
 import (
-	"github.com/Shopify/goose/v2/logger"
 	"github.com/pkg/errors"
+
+	"github.com/Shopify/goose/v2/logger"
 )
 
 type LoggableError interface {

@@ -5,9 +5,10 @@ import (
 	stderrors "errors"
 	"testing"
 
-	"github.com/Shopify/goose/v2/logger"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+
+	"github.com/Shopify/goose/v2/logger"
 )
 
 func Test_FieldsFromError_NoFields(t *testing.T) {

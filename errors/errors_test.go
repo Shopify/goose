@@ -2,7 +2,6 @@ package errors
 
 import (
 	"context"
-	"errors"
 	stderrors "errors"
 	"testing"
 
@@ -37,7 +36,7 @@ func TestWrapJoined(t *testing.T) {
 }
 
 func TestJoinWrapped(t *testing.T) {
-	err := errors.Join(New("first"), Wrap(New("inner"), "outer"))
+	err := stderrors.Join(New("first"), Wrap(New("inner"), "outer"))
 	require.NotNil(t, err)
 	require.Equal(t, "first\nouter: inner", err.Error())
 }
