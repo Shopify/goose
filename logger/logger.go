@@ -31,7 +31,8 @@ func FromContext(ctx context.Context) FieldLogger {
 
 type FieldLogger interface {
 	logrus.FieldLogger
-	WithContext(ctx context.Context) *logrus.Entry // Unfortunately, logrus' signature returns a *logrus.Entry, so we can't return a FieldLogger
+	// WithContext Unfortunately, logrus' signature returns a *logrus.Entry, so we can't return a FieldLogger
+	WithContext(ctx context.Context) *logrus.Entry
 }
 
 type Logger func(context.Context, ...error) *logrus.Entry

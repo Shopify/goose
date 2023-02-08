@@ -36,9 +36,7 @@ func DuplicateLogger(source *logrus.Logger) *logrus.Logger {
 	logger.SetReportCaller(source.ReportCaller)
 
 	for level, hooks := range logger.Hooks {
-		for _, hook := range hooks {
-			logger.Hooks[level] = append(logger.Hooks[level], hook)
-		}
+		logger.Hooks[level] = append(logger.Hooks[level], hooks...)
 	}
 
 	return logger

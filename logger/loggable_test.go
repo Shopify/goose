@@ -61,7 +61,7 @@ func ExampleWatchingLoggable() {
 func TestEmptyContext(t *testing.T) {
 	ctx := context.Background()
 	// Using a basic type on purpose, disable linter
-	ctx = context.WithValue(ctx, "a", "b")
+	ctx = context.WithValue(ctx, "a", "b") //nolint:revive,staticcheck
 	// Not showing up in logs
 	checkData(ctx, t, logrus.Fields{})
 }
