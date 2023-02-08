@@ -2,6 +2,7 @@ package errors
 
 import (
 	"context"
+	stderrors "errors"
 	"testing"
 
 	"github.com/Shopify/goose/v2/logger"
@@ -47,4 +48,28 @@ func Test_FieldsFromError_From_Context(t *testing.T) {
 		"KEY2":  "VAL2", // fields from inner error have precedence.
 		"EXTRA": "EXTRA",
 	}, FieldsFromError(err))
+}
+
+func Test_FieldsFromJoinedError(t *testing.T) {
+	err1 := Wrap(New(""), "", Fields{"FOO": "BAR"})
+	err2 := stderrors.Join(Wrap(err1, "", Fields{"BAZ": "BOO"}), New("second"))
+
+	extracted := FieldsFromError(err2)
+	require.Equal(t, Fields{"FOO": "BAR", "BAZ": "BOO"}, extracted)
+
+	err3 := stderrors.Join(Wrap(err1, "", Fields{"BAZ": "BOO"}), Wrap(New(""), "", Fields{"FOO": "BAR"}))
+
+	extracted = FieldsFromError(err3)
+	require.Equal(t, Fields{"FOO": "BAR", "BAZ": "BOO"}, extracted)
+
+	err4 := stderrors.Join(Wrap(New(""), "", Fields{"FOO": "BAR"}), Wrap(New(""), "", Fields{"BAZ": "BOO"}))
+
+	extracted = FieldsFromError(err4)
+	require.Equal(t, Fields{"FOO": "BAR", "BAZ": "BOO"}, extracted)
+
+	err5 := stderrors.Join(Wrap(New(""), "", Fields{"FRUIT": "BANANA"}), New(""))
+	err6 := Wrap(stderrors.Join(Wrap(err5, "", Fields{"BAZ": "BOO"}), Wrap(New(""), "", Fields{"FOO": "BAR"})), "", Fields{"JOINED": "YES"})
+
+	extracted = FieldsFromError(err6)
+	require.Equal(t, Fields{"FOO": "BAR", "BAZ": "BOO", "JOINED": "YES", "FRUIT": "BANANA"}, extracted)
 }

@@ -50,6 +50,7 @@ func As(err error, target interface{}) bool {
 // Unwrap returns the result of calling the Unwrap method on err, if err's
 // type contains an Unwrap method returning error.
 // Otherwise, Unwrap returns nil.
+// Unwrap returns nil if the Unwrap method returns []error.
 func Unwrap(err error) error {
 	return stderrors.Unwrap(err)
 }

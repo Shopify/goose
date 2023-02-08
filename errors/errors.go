@@ -63,7 +63,7 @@ func Wrap(err error, message string, fields ...Fields) error {
 	return &baseError{
 		err:     err,
 		message: fmt.Sprintf("%s: %s", message, err.Error()),
-		fields:  mergeFields(nil, err, fields...),
+		fields:  mergeFieldsCtx(nil, err, fields...),
 		stack:   captureStack(),
 	}
 }
@@ -79,7 +79,7 @@ func WrapCtx(ctx context.Context, err error, message string, fields ...Fields) e
 	return &baseError{
 		err:     err,
 		message: message + ": " + err.Error(),
-		fields:  mergeFields(ctx, err, fields...),
+		fields:  mergeFieldsCtx(ctx, err, fields...),
 		stack:   captureStack(),
 	}
 }
@@ -94,7 +94,7 @@ func With(err error, fields ...Fields) error {
 	return &baseError{
 		err:     err,
 		message: err.Error(),
-		fields:  mergeFields(nil, err, fields...),
+		fields:  mergeFieldsCtx(nil, err, fields...),
 		stack:   captureStack(),
 	}
 }
@@ -110,7 +110,7 @@ func WithCtx(ctx context.Context, err error, fields ...Fields) error {
 	return &baseError{
 		err:     err,
 		message: err.Error(),
-		fields:  mergeFields(ctx, err, fields...),
+		fields:  mergeFieldsCtx(ctx, err, fields...),
 		stack:   captureStack(),
 	}
 }
