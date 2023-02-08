@@ -2,25 +2,43 @@ package logger
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
-type causer interface {
-	Cause() error
+type loggerContextKeyType struct{}
+
+var (
+	loggerContextKey = loggerContextKeyType{}
+)
+
+func WithLogger(ctx context.Context, logger FieldLogger) context.Context {
+	return context.WithValue(ctx, loggerContextKey, logger)
 }
 
-var GlobalFields = logrus.Fields{}
+func FromContext(ctx context.Context) FieldLogger {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 
-type Logger func(Valuer, ...error) *logrus.Entry
+	logger, _ := ctx.Value(loggerContextKey).(FieldLogger)
+	if logger == nil {
+		logger = DefaultLogger()
+	}
+	return logger.WithContext(ctx)
+}
+
+type FieldLogger interface {
+	logrus.FieldLogger
+	// WithContext Unfortunately, logrus' signature returns a *logrus.Entry, so we can't return a FieldLogger
+	WithContext(ctx context.Context) *logrus.Entry
+}
+
+type Logger func(context.Context, ...error) *logrus.Entry
 
 func New(name string) Logger {
-	return func(ctx Valuer, err ...error) *logrus.Entry {
-		if len(err) == 1 && err[0] == nil {
-			err = nil
-		}
+	return func(ctx context.Context, err ...error) *logrus.Entry {
 		return ContextLog(ctx, err, nil).WithField("component", name)
 	}
 }
@@ -30,41 +48,24 @@ type loggableError interface {
 	Loggable
 }
 
-func ContextLog(ctx Valuer, err []error, entry *logrus.Entry) *logrus.Entry {
+func joinErrors(errs ...error) error {
+	switch len(errs) {
+	case 0:
+		return nil
+	case 1:
+		return errs[0]
+	default:
+		return errors.Join(errs...)
+	}
+}
+
+func ContextLog(ctx context.Context, err []error, entry *logrus.Entry) *logrus.Entry {
 	if entry == nil {
-		entry = logrus.NewEntry(logrus.StandardLogger())
-	}
-	entry = entry.WithFields(GlobalFields)
-
-	if ctx != nil {
-		entry = entry.WithFields(GetLoggableValues(ctx))
-		if ctx, ok := ctx.(context.Context); ok {
-			entry = entry.WithContext(ctx)
-		}
+		entry = FromContext(ctx).WithFields(logrus.Fields{}) // Call WithFields to get an Entry
 	}
 
-	if len(err) != 0 {
-		err0 := err[0]
-		entry = entry.WithField("error", err0)
-
-		if _, ok := err0.(causer); ok {
-			entry = entry.WithField("cause", errors.Cause(err0))
-		}
-
-		for i, errX := range err[1:] {
-			entry = entry.WithField(fmt.Sprintf("error%d", i+1), errX)
-
-			if _, ok := errX.(causer); ok {
-				entry = entry.WithField(fmt.Sprintf("cause%d", i+1), errors.Cause(errX))
-			}
-		}
-
-		// Check last, to allow LogFields to overwrite this package's behaviour.
-		// Do not recurse in error causes, the error itself should merge its causes' fields if desired.
-		var loggable loggableError
-		if errors.As(err0, &loggable) {
-			entry = entry.WithFields(loggable.LogFields())
-		}
+	if err := joinErrors(err...); err != nil {
+		entry = entry.WithError(err)
 	}
 
 	return entry
@@ -76,6 +77,10 @@ func ContextLog(ctx Valuer, err []error, entry *logrus.Entry) *logrus.Entry {
 //	defer LogIfError(ctx, f.Close, log, "failed to close file")
 func LogIfError(ctx context.Context, fn func() error, logger Logger, msg string) {
 	if err := fn(); err != nil {
-		logger(ctx, err).Error(msg)
+		if logger != nil {
+			logger(ctx, err).Error(msg)
+		} else {
+			FromContext(ctx).WithError(err).Error(msg)
+		}
 	}
 }

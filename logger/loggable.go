@@ -6,20 +6,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// This create a private key-space in the Context, meaning that only this package can get or set "contextKey" types
-type contextKey struct{}
+type logFieldsKeyType struct{}
 
 var (
-	logFieldsKey = contextKey{}
+	logFieldsKey = logFieldsKeyType{}
 )
 
 type Loggable interface {
 	LogFields() logrus.Fields
-}
-
-// Valuer is essentially a Context, but down-scoped to what Loggable expects
-type Valuer interface {
-	Value(key interface{}) interface{}
 }
 
 type keyValueContext struct {
@@ -81,7 +75,7 @@ func WatchingLoggable(ctx context.Context, l Loggable) context.Context {
 }
 
 // GetLoggableValue returns the value of the metadata currently attached to the Context.
-func GetLoggableValue(ctx Valuer, key string) interface{} {
+func GetLoggableValue(ctx context.Context, key string) interface{} {
 	fields := GetLoggableValues(ctx)
 	if v, ok := fields[key]; ok {
 		return v
@@ -89,7 +83,7 @@ func GetLoggableValue(ctx Valuer, key string) interface{} {
 	return nil
 }
 
-func GetLoggableValues(ctx Valuer) logrus.Fields {
+func GetLoggableValues(ctx context.Context) logrus.Fields {
 	if ctx != nil {
 		fields, _ := ctx.Value(logFieldsKey).(logrus.Fields)
 		if fields != nil {

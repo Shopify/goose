@@ -2,7 +2,6 @@ package logger
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -10,55 +9,53 @@ import (
 )
 
 func ExampleWithField() {
-	ctx := context.Background()
+	ctx := withStdoutLogger(context.Background()) // Optional
+
 	ctx = WithField(ctx, "foo", "bar")
 
-	log := New("testing")
-
-	// Typically called as log(ctx, nil).Debug("the message")
-	entry := log(ctx, nil)
-	fmt.Printf("%+v", entry.Data["foo"])
+	log := New("testing") // Package-global
+	log(ctx).Info("example")
 
 	// Output:
-	// bar
+	// level=info msg=example component=testing foo=bar
 }
 
 func ExampleWithFields() {
-	ctx := context.Background()
+	ctx := withStdoutLogger(context.Background()) // Optional
+
 	ctx = WithFields(ctx, logrus.Fields{
 		"foo": "bar",
 	})
 
-	log := New("testing")
-
-	// Typically called as log(ctx, nil).Debug("the message")
-	entry := log(ctx, nil)
-	fmt.Printf("%+v", entry.Data["foo"])
+	log := New("testing") // Package-global
+	log(ctx).Info("example")
 
 	// Output:
-	// bar
+	// level=info msg=example component=testing foo=bar
 }
 
-type exampleLoggable logrus.Fields
+type exampleLoggable struct {
+	name string
+}
 
 func (l exampleLoggable) LogFields() logrus.Fields {
-	return logrus.Fields(l)
+	return logrus.Fields{
+		"name": l.name,
+	}
 }
 
 func ExampleWatchingLoggable() {
-	loggable := &exampleLoggable{"foo": "bar"}
+	ctx := withStdoutLogger(context.Background()) // Optional
 
-	ctx := context.Background()
+	loggable := &exampleLoggable{name: "foo"}
+
 	ctx = WatchingLoggable(ctx, loggable)
 
-	log := New("testing")
-
-	// Typically called as log(ctx, nil).Debug("the message")
-	entry := log(ctx, nil)
-	fmt.Printf("%+v", entry.Data["foo"])
+	log := New("testing") // Package-global
+	log(ctx).Info("example")
 
 	// Output:
-	// bar
+	// level=info msg=example component=testing name=foo
 }
 
 func TestEmptyContext(t *testing.T) {
@@ -66,12 +63,11 @@ func TestEmptyContext(t *testing.T) {
 	// Using a basic type on purpose, disable linter
 	ctx = context.WithValue(ctx, "a", "b") //nolint:revive,staticcheck
 	// Not showing up in logs
-	checkData(ctx, t, logrus.Fields{"component": "testing"})
+	checkData(ctx, t, logrus.Fields{})
 }
 
 func TestWithFields(t *testing.T) {
-	// Test that passing nil doesn't actually crash it, disable the linter
-	ctx := WithFields(nil, logrus.Fields{"a": "b", "c": "d"}) //nolint:golint,staticcheck
+	ctx := WithFields(context.Background(), logrus.Fields{"a": "b", "c": "d"})
 	ctx = WithFields(ctx, logrus.Fields{"a": "e", "f": "g"})
 
 	// Test overrides
@@ -193,8 +189,7 @@ func TestWatchingLoggable(t *testing.T) {
 }
 
 func checkData(ctx context.Context, t *testing.T, expected logrus.Fields) {
-	expected["component"] = "testing" // Will always be there
-	assert.Equal(t, expected, New("testing")(ctx, nil).Data)
+	assert.Equal(t, expected, GetLoggableValues(ctx))
 }
 
 func TestGetLoggableValue(t *testing.T) {
