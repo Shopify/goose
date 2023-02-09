@@ -35,12 +35,11 @@ func (h *HttpError) WithMsg(msg string) *HttpError {
 }
 
 func (h *HttpError) Write(w http.ResponseWriter) (int, error) {
+	w.WriteHeader(h.status)
 	written, err := w.Write([]byte(h.msg))
 	if err != nil {
 		return written, err
 	}
-
-	w.WriteHeader(h.status)
 	return written, nil
 }
 
