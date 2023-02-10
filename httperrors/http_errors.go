@@ -1,8 +1,6 @@
 package httperrors
 
-import (
-	"net/http"
-)
+import "net/http"
 
 type HttpError struct {
 	err    error
@@ -42,11 +40,3 @@ func (h *HttpError) Write(w http.ResponseWriter) (int, error) {
 	}
 	return written, nil
 }
-
-// func (h *HttpError) AsResponse() *http.Response {
-// 	return &http.Response{
-// 		Body:       io.NopCloser(bufio.NewReader(strings.NewReader(h.msg))),
-// 		StatusCode: h.status,
-// 		Status:     http.StatusText(h.status),
-// 	}
-// }
