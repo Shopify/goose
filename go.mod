@@ -3,8 +3,7 @@ module github.com/Shopify/goose
 go 1.15
 
 require (
-	github.com/DataDog/datadog-go v4.8.1+incompatible
-	github.com/Microsoft/go-winio v0.5.0 // indirect
+	github.com/DataDog/datadog-go/v5 v5.3.0
 	github.com/bugsnag/bugsnag-go/v2 v2.1.1
 	github.com/bugsnag/panicwrap v1.3.4
 	github.com/google/pprof v0.0.0-20210804190019-f964ff605595
