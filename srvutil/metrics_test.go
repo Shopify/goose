@@ -22,6 +22,8 @@ import (
 	"github.com/Shopify/goose/statsd"
 )
 
+const httpScheme = "http://"
+
 func TestRequestMetricsMiddleware(t *testing.T) {
 	var recordedTags []string
 	statsd.SetBackend(statsd.NewForwardingBackend(func(_ context.Context, mType string, name string, value interface{}, tags []string, _ float64) error {
@@ -58,7 +60,7 @@ func TestRequestMetricsMiddleware(t *testing.T) {
 	defer s.Tomb().Kill(nil)
 	safely.Run(s)
 
-	u := "http://" + s.Addr().String() + "/hello/world"
+	u := httpScheme + s.Addr().String() + "/hello/world"
 
 	req, err := http.NewRequest("GET", u, nil)
 	req.Header.Set("Authorization", "secret")
