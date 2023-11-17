@@ -38,7 +38,7 @@ func ExampleNewServer() {
 	defer s.Tomb().Kill(nil)
 	safely.Run(s)
 
-	u := "http://" + s.Addr().String() + "/hello/world"
+	u := httpScheme + s.Addr().String() + "/hello/world"
 
 	res, _ := http.Get(u)
 	io.Copy(os.Stdout, res.Body)
@@ -64,7 +64,7 @@ func TestNewServer(t *testing.T) {
 	defer s.Tomb().Kill(nil)
 	safely.Run(s)
 
-	u := "http://" + s.Addr().String()
+	u := httpScheme + s.Addr().String()
 	t.Logf("test server running on %s", u)
 
 	assert.Contains(t, logOutput.String(), "level=info msg=\"starting server\" bind=\"127.0.0.1:0\"")
@@ -127,7 +127,7 @@ func TestNewServerFromFactory(t *testing.T) {
 	defer s.Tomb().Kill(nil)
 	safely.Run(s)
 
-	u := "http://" + s.Addr().String()
+	u := httpScheme + s.Addr().String()
 	t.Logf("test server running on %s", u)
 
 	assert.Contains(t, logOutput.String(), "level=info msg=\"starting server\" bind=\"127.0.0.1:0\"")
@@ -205,7 +205,7 @@ func TestStoppableKeepaliveListener_Accept(t *testing.T) {
 	s := NewServer(tb, "127.0.0.1:0", sl)
 	safely.Run(s)
 
-	u := "http://" + s.Addr().String()
+	u := httpScheme + s.Addr().String()
 	t.Logf("test server running on %s", u)
 
 	done := make(chan struct{})

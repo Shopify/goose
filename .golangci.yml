@@ -13,17 +13,14 @@ output:
 
 linters:
   enable:
-    - depguard
     - dupl
     - goconst
     - gocritic
     - gofmt
     - goimports
-    - golint
     - gosec
     - govet
     - lll
-    - maligned
     - megacheck
     - misspell
     - nakedret
@@ -37,7 +34,7 @@ linters-settings:
     threshold: 100
   goconst:
     min-len: 2
-    min-occurrences: 2
+    min-occurrences: 3 # now is inclusive
   goimports:
     # put imports beginning with prefix after 3rd-party packages;
     # it's a comma-separated list of prefixes
