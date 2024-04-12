@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Shopify/goose/logger"
 	"github.com/Shopify/goose/metrics"
 	"github.com/Shopify/goose/redact"
 	"github.com/Shopify/goose/statsd"
@@ -29,10 +30,13 @@ func (o *DefaultRequestObserver) BeforeRequest(r *http.Request) {
 func (o *DefaultRequestObserver) AfterRequest(r *http.Request, recorder HTTPRecorder, requestDuration time.Duration) {
 	ctx := r.Context()
 
-	ctx = statsd.WithTagLogFields(ctx, statsd.Tags{
+	fields := map[string]interface{}{
 		"statusCode":  recorder.StatusCode(),
 		"statusClass": fmt.Sprintf("%dxx", recorder.StatusCode()/100), // 2xx, 5xx, etc.
-	})
+	}
+
+	ctx = statsd.WithTags(ctx, fields)
+	ctx = logger.WithFields(ctx, fields)
 
 	metrics.HTTPRequest.Duration(ctx, requestDuration)
 
