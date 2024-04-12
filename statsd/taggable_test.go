@@ -3,13 +3,9 @@ package statsd
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/Shopify/goose/logger"
 )
 
 var exampleBackend = NewForwardingBackend(func(_ context.Context, mType string, name string, value interface{}, tags []string, _ float64) error {
@@ -21,16 +17,6 @@ type testTaggable Tags
 
 func (t *testTaggable) StatsTags() Tags {
 	return Tags(*t)
-}
-
-type testLoggable logrus.Fields
-
-func (l *testLoggable) LogFields() logrus.Fields {
-	return logrus.Fields(*l)
-}
-
-func (l *testLoggable) StatsTags() Tags {
-	return SelectKeys(l.LogFields(), "testField")
 }
 
 func ExampleWithTags() {
@@ -59,33 +45,6 @@ func ExampleWatchingTaggable() {
 
 	// Output:
 	// count: page.view: 10 [email:unknown user:anonymous]
-}
-
-func ExampleSelectKeys() {
-	// <setup for example>
-	logrusLogger := logrus.New()
-	logrusLogger.Out = os.Stdout
-	logrusLogger.Formatter = &logrus.TextFormatter{
-		DisableColors:    true,
-		DisableTimestamp: true,
-	}
-	entry := logrus.NewEntry(logrusLogger)
-	SetBackend(exampleBackend)
-	// </setup for example>
-
-	session := &testLoggable{"foo": "bar", "testField": "test"}
-
-	ctx := context.Background()
-	ctx = WithTagLoggable(ctx, session)
-
-	metric := &Counter{Name: "page.view"}
-	metric.Count(ctx, 10)
-
-	logger.ContextLog(ctx, nil, entry).Info("example")
-
-	// Output:
-	// count: page.view: 10 [testField:test]
-	// level=info msg=example foo=bar testField=test
 }
 
 func TestEmptyContext(t *testing.T) {

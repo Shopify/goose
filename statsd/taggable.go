@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sort"
-
-	"github.com/Shopify/goose/logger"
 )
 
 // This create a private key-space in the Context, meaning that only this package can get or set "contextKey" types
@@ -81,49 +79,6 @@ func WithTaggable(ctx context.Context, t Taggable) context.Context {
 // When a metric is recorded, StatsTags() will be called and the tags will be appended.
 func WatchingTaggable(ctx context.Context, t Taggable) context.Context {
 	return &taggableContext{Context: ctx, taggable: t}
-}
-
-// WithTagLogFields combines logger.WithFields(fields) and WithTags(tags)
-// This simplifies the common operation of adding fields to the logger and the metrics
-// This argument purposefully not typed as Tags, such that logrus.Fields and Tags can both be passed without additional casting.
-func WithTagLogFields(ctx context.Context, tags map[string]interface{}) context.Context {
-	ctx = logger.WithFields(ctx, tags)
-	ctx = WithTags(ctx, tags)
-	return ctx
-}
-
-// WithTagLoggable combines WithTaggable and logger.WithLoggable
-// If the Loggable is a Taggable already (implements StatsTags), it will be used directly.
-// If StatsTags doesn't exist, LogFields() will be used instead.
-func WithTagLoggable(ctx context.Context, l logger.Loggable) context.Context {
-	ctx = logger.WithLoggable(ctx, l)
-	if taggable, ok := l.(Taggable); ok {
-		ctx = WithTaggable(ctx, taggable)
-	} else {
-		ctx = WithTaggable(ctx, tagLoggable{l})
-	}
-	return ctx
-}
-
-type tagLoggable struct {
-	logger.Loggable
-}
-
-func (l tagLoggable) StatsTags() Tags {
-	return Tags(l.LogFields())
-}
-
-// WatchingTagLoggable combines WatchingTaggable and logger.WatchingLoggable
-// If the Loggable is a Taggable already (implements StatsTags), it will be used directly.
-// If StatsTags doesn't exist, LogFields() will be used instead.
-func WatchingTagLoggable(ctx context.Context, l logger.Loggable) context.Context {
-	ctx = logger.WatchingLoggable(ctx, l)
-	if taggable, ok := l.(Taggable); ok {
-		ctx = WatchingTaggable(ctx, taggable)
-	} else {
-		ctx = WatchingTaggable(ctx, tagLoggable{l})
-	}
-	return ctx
 }
 
 // getStatsTags returns the merged tags as a list
