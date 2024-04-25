@@ -7,7 +7,7 @@ require (
 	github.com/bugsnag/bugsnag-go/v2 v2.4.0
 	github.com/bugsnag/panicwrap v1.3.4
 	github.com/google/pprof v0.0.0-20210804190019-f964ff605595
-	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/mux v1.8.1
 	github.com/ianlancetaylor/demangle v0.0.0-20210724235854-665d3a6fe486 // indirect
 	github.com/imdario/mergo v0.3.12
 	github.com/kr/pretty v0.2.1 // indirect
