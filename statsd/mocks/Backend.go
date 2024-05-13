@@ -95,3 +95,17 @@ func (_m *Backend) Timing(ctx context.Context, name string, value time.Duration,
 
 	return r0
 }
+
+// Close provides a mock function
+func (_m *Backend) Close() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}

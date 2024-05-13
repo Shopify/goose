@@ -41,3 +41,7 @@ func (b *forwardingBackend) Set(ctx context.Context, name string, value string, 
 func (b *forwardingBackend) Timing(ctx context.Context, name string, value time.Duration, tags []string, rate float64) error {
 	return b.handler(ctx, "timing", name, value, tags, rate)
 }
+
+func (b *forwardingBackend) Close() error {
+	return nil
+}

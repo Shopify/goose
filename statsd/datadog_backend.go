@@ -60,3 +60,7 @@ func (b *datadogBackend) Set(_ context.Context, name string, value string, tags 
 func (b *datadogBackend) Timing(_ context.Context, name string, value time.Duration, tags []string, rate float64) error {
 	return b.client.Timing(name, value, tags, rate)
 }
+
+func (b *datadogBackend) Close() error {
+	return b.client.Close()
+}
