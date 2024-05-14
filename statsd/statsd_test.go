@@ -12,6 +12,10 @@ func TestBackend(t *testing.T) {
 	dd, err := NewDatadogBackend("localhost:8125", "catwalk", []string{"global:tag"})
 	require.NoError(t, err)
 
+	defer func() {
+		dd.Close()
+	}()
+
 	tests := []struct {
 		impl string
 		exp  Backend

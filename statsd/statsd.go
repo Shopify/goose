@@ -34,6 +34,8 @@ type Backend interface {
 	Set(ctx context.Context, name string, value string, tags []string, rate float64) error
 	// Timing sends timing information, it is an alias for TimeInMilliseconds
 	Timing(ctx context.Context, name string, value time.Duration, tags []string, rate float64) error
+	// Close closes the connection to the statsd server.
+	Close() error
 }
 
 var currentBackend = NewNullBackend()
