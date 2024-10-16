@@ -3,13 +3,10 @@
 run:
   timeout: 5m
 
-  skip-files:
-    - ".*_mock\\.go$"
-    - "\\.pb\\.go$"
-
 output:
-  # colored-line-number|line-number|json|tab|checkstyle|code-climate, default is "colored-line-number"
-  format: colored-line-number
+  formats:
+    - format: colored-line-number
+      path: stdout
 
 linters:
   enable:
@@ -21,13 +18,15 @@ linters:
     - gosec
     - govet
     - lll
-    - megacheck
     - misspell
     - nakedret
     - prealloc
     - stylecheck
     - unconvert
     - unparam
+    - gosimple
+    - staticcheck
+    - unused
 
 linters-settings:
   dupl:
@@ -45,8 +44,14 @@ linters-settings:
     line-length: 140
   maligned:
     suggest-new: true
-
+  gosec:
+    excludes:
+      - G115
 issues:
+  exclude-files:
+    - ".*_mock\\.go$"
+    - "\\.pb\\.go$"
+
   exclude-rules:
     - path: _test\.go
       linters:
