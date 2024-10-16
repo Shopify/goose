@@ -24,6 +24,8 @@ func NewDatadogBackend(endpoint, namespace string, tags []string) (Backend, erro
 		statsd.WithoutTelemetry(),
 		statsd.WithoutOriginDetection(),
 		statsd.WithClientSideAggregation(),
+		statsd.WithExtendedClientSideAggregation(),
+		statsd.WithMaxSamplesPerContext(500),
 	)
 	if err != nil {
 		return nil, err
