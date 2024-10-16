@@ -5,13 +5,13 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"path/filepath"
 	"sync"
 	"syscall"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func ExampleSupervisor_Wait() {
@@ -176,16 +176,15 @@ func TestCommandRunWaitPipeFails(t *testing.T) {
 }
 
 func TestCommandWithWorkingDir(t *testing.T) {
+	tempDir := t.TempDir()
 	ctx := context.Background()
 	stdout, _, err := NewBuilder(ctx, "pwd").
-		WithWorkingDir("/tmp").
+		WithWorkingDir(tempDir).
 		Prepare().
 		RunAndGetOutput()
 
-	assert.NoError(t, err)
-	expected, err := filepath.EvalSymlinks("/tmp")
-	assert.NoError(t, err)
-	assert.Equal(t, []byte(expected+"\n"), stdout)
+	require.NoError(t, err)
+	assert.Equal(t, []byte(tempDir+"\n"), stdout)
 }
 
 func TestCommandEnvDoesNotEval(t *testing.T) {
