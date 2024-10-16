@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -73,7 +72,7 @@ func TestNewServer(t *testing.T) {
 	res, err := http.Get(u)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, "great success", string(body))
 
@@ -136,7 +135,7 @@ func TestNewServerFromFactory(t *testing.T) {
 	res, err := http.Get(u)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, "great success", string(body))
 
@@ -214,7 +213,7 @@ func TestStoppableKeepaliveListener_Accept(t *testing.T) {
 		res, err := http.Get(u) // This will block on tb.Dying()
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		assert.NoError(t, err)
 		assert.Equal(t, "great success", string(body))
 		close(done)
