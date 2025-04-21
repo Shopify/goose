@@ -211,9 +211,9 @@ func httpRequestMiddleware(event *bugsnaggo.Event, config *bugsnaggo.Configurati
 }
 
 func (snagger *bugsnagger) Setup(apiKey string, commit string, env string, packages []string) {
-	// Add the bugsnag package and it's folder location on disk to bugsnag's ProjectPackages.
-	// This will ensure that Notify calls from bugsnagger.go will always share the same file name
-	// and will retain grouping across Shopify/goose dependency upgrades.
+	// Add the bugsnag package and its folder location on disk to Bugsnag's ProjectPackages.
+	// This ensures Notify calls from bugsnagger.go always share the same file name
+	// and retain grouping across Shopify/goose dependency upgrades.
 	packages = append(packages, "main*", "github.com/Shopify/goose/bugsnag")
 	if _, file, _, ok := runtime.Caller(0); ok {
 		gooseMod := strings.TrimSuffix(file, "bugsnag/bugsnagger.go")
@@ -228,6 +228,10 @@ func (snagger *bugsnagger) Setup(apiKey string, commit string, env string, packa
 		ReleaseStage:    env,
 		Synchronous:     true,
 		PanicHandler:    panicHandler,
+		Endpoints: bugsnaggo.Endpoints{
+			Notify:   "https://error-analytics-production.shopifysvc.com",
+			Sessions: "https://error-analytics-sessions-production.shopifysvc.com",
+		},
 	})
 }
 
