@@ -38,12 +38,8 @@ linters-settings:
     # put imports beginning with prefix after 3rd-party packages;
     # it's a comma-separated list of prefixes
     local-prefixes: github.com/Shopify/goose
-  golint:
-    min-confidence: 0
   lll:
     line-length: 140
-  maligned:
-    suggest-new: true
   gosec:
     excludes:
       - G115
