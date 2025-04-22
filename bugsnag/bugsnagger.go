@@ -210,7 +210,28 @@ func httpRequestMiddleware(event *bugsnaggo.Event, config *bugsnaggo.Configurati
 	return nil
 }
 
-func (snagger *bugsnagger) Setup(apiKey string, commit string, env string, packages []string) {
+type bugsnagOpts struct {
+	endpoints bugsnaggo.Endpoints
+}
+
+type BugsnaggerOption func(opts *bugsnagOpts)
+
+// WithEndpoints sets the endpoints for the bugsnag client
+func WithEndpoints(notifier bugsnaggo.Endpoints) BugsnaggerOption {
+	return func(opts *bugsnagOpts) {
+		opts.endpoints = notifier
+	}
+}
+
+// Setup initializes the bugsnag client with the given API key, commit, environment, and packages.
+// By default, it will use the endpoints for Shopify internal error analytics service.
+func (snagger *bugsnagger) Setup(
+	apiKey string,
+	commit string,
+	env string,
+	packages []string,
+	opts ...BugsnaggerOption,
+) {
 	// Add the bugsnag package and its folder location on disk to Bugsnag's ProjectPackages.
 	// This ensures Notify calls from bugsnagger.go always share the same file name
 	// and retain grouping across Shopify/goose dependency upgrades.
@@ -218,6 +239,17 @@ func (snagger *bugsnagger) Setup(apiKey string, commit string, env string, packa
 	if _, file, _, ok := runtime.Caller(0); ok {
 		gooseMod := strings.TrimSuffix(file, "bugsnag/bugsnagger.go")
 		packages = append(packages, gooseMod+"*")
+	}
+
+	var bo = &bugsnagOpts{
+		endpoints: bugsnaggo.Endpoints{
+			Notify:   "https://error-analytics-production.shopifysvc.com",
+			Sessions: "https://error-analytics-sessions-production.shopifysvc.com",
+		},
+	}
+
+	for _, opt := range opts {
+		opt(bo)
 	}
 
 	bugsnaggo.OnBeforeNotify(httpRequestMiddleware)
@@ -228,10 +260,7 @@ func (snagger *bugsnagger) Setup(apiKey string, commit string, env string, packa
 		ReleaseStage:    env,
 		Synchronous:     true,
 		PanicHandler:    panicHandler,
-		Endpoints: bugsnaggo.Endpoints{
-			Notify:   "https://error-analytics-production.shopifysvc.com",
-			Sessions: "https://error-analytics-sessions-production.shopifysvc.com",
-		},
+		Endpoints:       bo.endpoints,
 	})
 }
 
